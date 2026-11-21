@@ -58,7 +58,9 @@ class Pipeline:
             out = d.process(ctx)
             self.outputs[d.name] = out
             signals[d.name] = out.signals
-            events += [e for e in out.events if self.cooldown.ready(e.type, now)]
+            # cooldown per event type; gestures per gesture name (thumbs-up shouldn't block palm)
+            events += [e for e in out.events
+                       if self.cooldown.ready(e.type + str(e.data.get("gesture", "")), now)]
         self._ctx = ctx
         return signals, events
 

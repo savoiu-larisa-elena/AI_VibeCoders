@@ -1,7 +1,7 @@
-# Python 3.12 (64-bit)
+# Python 3.12 (64-bit). Versions verified working together on Windows 11.
 opencv-python==5.1.0.95
-mediapipe==1.2.3
+mediapipe==1.2.3        # Tasks API (the old mp.solutions API no longer exists)
 numpy==2.5.5
-ultralytics==8.4.216
-fastapi
-uvicorn
+ultralytics==8.4.216    # YOLO for phone/cup/bottle - pulls in PyTorch (~large download)
+openai==3.57.0          # LLM client - also works with Groq / Gemini / Ollama (OpenAI-compatible APIs)
+python-dotenv==1.2.4    # reads API keys from .env
