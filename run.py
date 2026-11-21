@@ -43,8 +43,13 @@ def open_camera(cfg) -> cv2.VideoCapture:
 
 
 def put(frame, text, y, color=(255, 255, 255), scale=0.6):
-    cv2.putText(frame, text, (10, y), cv2.FONT_HERSHEY_SIMPLEX, scale, (0, 0, 0), 4)
-    cv2.putText(frame, text, (10, y), cv2.FONT_HERSHEY_SIMPLEX, scale, color, 1)
+    """Draw ONE line of text on a dark semi-transparent strip (readable on any background)."""
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    (tw, th), base = cv2.getTextSize(text, font, scale, 1)
+    x1, y1, x2, y2 = 6, y - th - 6, min(frame.shape[1], 14 + tw), y + base + 2
+    roi = frame[max(0, y1):y2, x1:x2]
+    roi[:] = (roi * 0.4).astype(roi.dtype)      # darken behind the text
+    cv2.putText(frame, text, (10, y), font, scale, color, 1, cv2.LINE_AA)
 
 
 def main():
