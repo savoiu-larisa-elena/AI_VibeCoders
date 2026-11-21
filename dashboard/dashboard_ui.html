@@ -368,6 +368,11 @@ a{color:inherit;text-decoration:none}
           <div class="assistmeta" id="assistMeta"></div>
           <div class="assistlog" id="assistLog"></div>
           <div class="hint" id="llmInfo" style="margin-top:10px">Checking assistant…</div>
+          <div style="margin-top:14px;display:grid;gap:10px">
+            <label><input type="checkbox" id="factNoMotion"> Fun fact every 5 seconds without motion</label>
+            <label><input type="checkbox" id="factPeriodic"> Ask if the driver is okay every 5 seconds without motion</label>
+            <div class="hint">Optional engagement prompts. Open palm temporarily mutes both.</div>
+          </div>
         </section>
 
         <section class="panel">
@@ -570,7 +575,19 @@ function perfNote(s){
   $('fpsNote').classList.toggle('slow',s.fps<12);
 }
 
+async function setFactSetting(feature, enabled){
+  try{
+    const response=await fetch(`/fun-facts/${feature}/${enabled?'on':'off'}`,{method:'POST'});
+    if(!response.ok)throw new Error('Failed');
+    toast('Fun fact preference updated.');
+  }catch(e){toast('Could not update fun fact preference.');await tick();}
+}
+$('factNoMotion').addEventListener('change',e=>setFactSetting('no_motion',e.target.checked));
+$('factPeriodic').addEventListener('change',e=>setFactSetting('periodic',e.target.checked));
 function renderAssistant(s){
+  const settings=s.fun_facts||{};
+  $('factNoMotion').checked=!!settings.no_motion;
+  $('factPeriodic').checked=!!settings.periodic;
   const r=s.assistant, llm=s.llm||{};
   $('llmInfo').textContent=llm.enabled?`LLM assistant: ${llm.provider} · ${llm.model}`:
     (llm.error?`LLM unavailable (${llm.error}) · showing pre-written guidance`:'LLM off · pre-written guidance (start the server with --llm)');

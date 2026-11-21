@@ -24,6 +24,7 @@ from dms.pipeline import Pipeline
 from dms.agent import Agent, DriverContext, LLMClient
 from dms.agent.agent import FALLBACKS
 from dms.perf import FpsCounter, boost_process
+from dms.fun_facts import FunFactScheduler
 
 app=FastAPI(title='VibeCoders Driver Telemetry')
 lock=threading.Lock()
@@ -34,6 +35,7 @@ state={'camera':'starting','calibrating':True,'fps':0,'signals':{},'statuses':{}
        # LLM assistant
        'attention':100,'llm':{'enabled':False,'provider':None,'model':None},
        'assistant':None,'assistant_log':[],'muted_seconds':0,
+       'fun_facts':{'no_motion':False,'periodic':False},
        # occupants + performance diagnostics
        'driver_present':False,'passengers':0,'timing':{},'frame_id':0,
        # AI voice (spoken on the laptop by dms.voice.Speaker); toggled from the dashboard
@@ -178,6 +180,15 @@ def set_voice(mode: str):
         state['voice']['enabled']=(mode=='on')
         return {'ok':True,'voice':state['voice']}
 
+@app.post('/fun-facts/{feature}/{mode}')
+def set_fun_facts(feature: str, mode: str):
+    from fastapi import HTTPException
+    if feature not in ('no_motion', 'periodic') or mode not in ('on', 'off'):
+        raise HTTPException(status_code=400, detail='Invalid fun-fact setting')
+    with lock:
+        state['fun_facts'][feature] = mode == 'on'
+        return {'ok': True, 'fun_facts': dict(state['fun_facts'])}
+
 @app.get('/video')
 def video():
     def frames():
@@ -239,6 +250,7 @@ def camera_worker(args):
 
     # ---- driver context (attention score) always; LLM assistant only with --llm ----
     context=DriverContext()
+    fact_scheduler=FunFactScheduler()
     agent=None
     if args.llm:
         PRIO={'info':1,'warning':2,'critical':3}
@@ -254,6 +266,11 @@ def camera_worker(args):
         except Exception as exc:   # voice must never break the dashboard
             print(f'[VOICE] disabled: {exc}',flush=True)
         def on_reply(r):   # called from the agent's background thread
+            if r.trigger == 'fun_fact':
+                with lock:
+                    enabled = any(state['fun_facts'].values())
+                if not enabled or (agent and time.time() < agent.snoozed_until):
+                    return
             write_log(r.to_json())
             item={'speak':r.speak,'priority':r.priority,'action':r.action,'note':r.dashboard_note,
                   'trigger':r.trigger,'level':r.level,'source':r.source,
@@ -271,6 +288,10 @@ def camera_worker(args):
             llm=LLMClient()
             agent=Agent(context,on_reply,llm)
             AGENT['agent']=agent
+            def facts_allowed():
+                with lock:
+                    return any(state['fun_facts'].values())
+            agent._facts_enabled = facts_allowed
             with lock:
                 state['llm']={'enabled':True,'provider':llm.provider,'model':llm.model}
         except Exception as exc:   # missing key etc. -> keep running without LLM
@@ -326,7 +347,13 @@ def camera_worker(args):
                         for event in events:
                             agent.handle(event)   # returns immediately; LLM runs in background
                 with lock:
-                    state['camera']='active'
+                    settings = dict(state['fun_facts'])
+                if agent:
+                    fact_scheduler.tick(pipeline, signals, now,
+                                        settings['no_motion'], settings['periodic'],
+                                        time.time() < agent.snoozed_until, agent)
+                with lock:
+                    state['camera']='active' 
                     state['calibrating']=bool(signals.get('calibrating'))
                     state['fps']=round(fps,1)
                     state['attention']=round(context.attention)

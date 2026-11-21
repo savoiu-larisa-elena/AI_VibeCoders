@@ -119,8 +119,19 @@ class Agent:
         self._alerts: list[tuple[float, str]] = []   # (timestamp, category) of alerts
         self._previous: list[str] = []     # last messages, so the LLM doesn't repeat itself
         self._busy = threading.Event()
+        self._facts_enabled = lambda: False
         self.snoozed_until = 0.0
         threading.Thread(target=self._worker, daemon=True).start()
+
+    def request_fun_fact(self, reason: str) -> bool:
+        """Low-priority request: never displace pending safety guidance."""
+        now = time.time()
+        if (now < self.snoozed_until or self._busy.is_set() or not self._queue.empty()
+                or now - self._last_alert_ts < 12 or now - self._last_call < 8):
+            return False
+        ev = Event("fun_fact", Severity.INFO, "engagement", data={"reason": reason})
+        self._submit(ev, 1, now)
+        return True
 
     # ---- escalation: decided by CODE, not by the LLM ----
     # Alerts only escalate within the same category: a yawn followed by a phone
@@ -214,24 +225,52 @@ class Agent:
                 reply = self._ask(ev, level, payload)
             finally:
                 self._busy.clear()
+            if ev.type == "fun_fact" and (time.time() < self.snoozed_until or
+                    time.time() - self._last_alert_ts < 12 or not self._facts_enabled()):
+                continue
             self._previous.append(reply.speak)
             self.on_reply(reply)
 
     def _ask(self, ev: Event, level: int, payload: dict) -> Reply:
         try:
-            data, latency = self.llm.chat_json(SYSTEM_PROMPT, json.dumps(payload))
+            prompt = SYSTEM_PROMPT
+            if ev.type == "fun_fact":
+                if ev.data.get("reason") == "driver_checkin":
+                    prompt = """You are a friendly in-car driving assistant.
+The camera has detected no visible driver motion for at least 10 seconds.
+Ask ONE short, calm, caring check-in question such as 'Hey, are you okay?'
+or 'Everything alright?'. Do not imply the driver is unconscious or asleep.
+Do not ask them to look away from the road or make a gesture.
+Avoid repeating previous_messages. Maximum 12 words.
+Return ONLY JSON with keys speak, priority, action, dashboard_note.
+Set priority to info and action to none."""
+                else:
+                    prompt = """You are a friendly in-car assistant. Return ONLY JSON with keys
+speak, priority, action, dashboard_note. Say ONE interesting, accurate, family-friendly
+random fun fact in at most 22 words. Do not ask the driver to look away, move hands,
+turn their head, or perform any action. Avoid repeating previous_messages.
+Set priority to info and action to none. Keep it brief and pleasant."""
+            data, latency = self.llm.chat_json(prompt, json.dumps(payload))
             speak = str(data.get("speak", "")).strip()
             if not speak:
                 raise LLMError("empty 'speak'")
             action = data.get("action") if data.get("action") in ACTIONS else "none"
+            if ev.type == "fun_fact":
+                action = "none"
             priority = data.get("priority") if data.get("priority") in ("info", "warning", "critical") \
                 else ev.severity.value
+            if ev.type == "fun_fact":
+                priority = "info"
             return Reply(speak, priority, action, str(data.get("dashboard_note", ""))[:120],
                          ev.type, level, "llm", latency)
         except LLMError as e:
             key = payload["trigger"].get("meaning", ev.type)
             text, priority, action = FALLBACKS.get(key, ("Please stay focused on the road.",
                                                              ev.severity.value, "eyes_on_road"))
+            if ev.type == "fun_fact":
+                text = ("Hey, are you doing okay?" if ev.data.get("reason") == "driver_checkin"
+                        else "Fun fact: Octopuses have three hearts.")
+                priority, action = "info", "none"
             if key == "status_report":
                 text = local_status_report(payload)   # real numbers, no LLM needed
             return Reply(text, priority, action, f"fallback: {ev.type}", ev.type, level,
