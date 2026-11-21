@@ -174,27 +174,7 @@ CV event → event filter + cooldown → compact JSON prompt
 
 **Current status:** This is an integration plan. The uploaded snapshot does **not** contain a working Groq/Gemini call, LLM alert rendering or speech synthesis. Do not present the example response as live functionality until integrated.
 
-## 🏆 Hackathon scrutineering — R1 to R4
 
-| Requirement | Jury expects | What this repository demonstrates |
-|---|---|---|
-| **R1 · Detect** | Computer vision reads driver attention/activity | **Implemented** — live fatigue, head pose, phone/drink and gesture detectors |
-| **R2 · React** | An **LLM** drives an in-car warning, dialogue or voice reaction | **Not yet complete** — structured event output exists; LLM call is pending |
-| **R3 · Run live** | Real camera feed, no pre-labeled/postprocessed demo | **Implemented in code** — live webcam pipeline; verify on the demo laptop |
-| **R4 · Show live** | Live categories/detections **and** LLM text/audio suggestion | **Partial** — OpenCV overlay exists; LLM suggestions are pending |
-
-The workshop also asks for a **public Git repository, clear README, repeatable startup instructions, regular commits, and a presentation/demo**. This documentation supports those deliverables; completing R2 and R4 requires additional implementation.
-
-### Suggested judge demo (once the LLM is integrated)
-
-1. **Launch** the webcam and show the calibration step.
-2. **Look straight ahead** — establish the neutral state.
-3. **Look away/down** for the configured interval — show the CV event and its telemetry.
-4. **Trigger a second event** (e.g., visible phone) — show distinct categories.
-5. **Show the LLM-generated message** in the live interface and explain event-based API usage.
-6. **Show graceful fallback** by temporarily disabling network access, if implemented.
-
-For the current code-only snapshot, steps 1–4 are the relevant live demonstration; steps 5–6 are planned.
 
 ## 🗂️ Garage layout — repository map
 
