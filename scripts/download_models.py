@@ -24,16 +24,16 @@ for name, url in MODELS.items():
     except Exception as e:  # noqa: BLE001
         dest.unlink(missing_ok=True)
         sys.exit(f"FAILED: {e}")
-yolo = out_dir / "yolo11n.pt"
-if yolo.exists():
-    print("ok        yolo11n.pt")
-else:
+for weights in ("yolo11s.pt",):        # model used by config.phone.model
+    if (out_dir / weights).exists():
+        print(f"ok        {weights}")
+        continue
     try:
         import os
 
         from ultralytics import YOLO
         os.chdir(out_dir)          # ultralytics downloads into the current folder
-        YOLO("yolo11n.pt")
-        print("download  yolo11n.pt ... done")
+        YOLO(weights)
+        print(f"download  {weights} ... done")
     except ImportError:
-        print("skip      yolo11n.pt (pip install ultralytics first, needed for phone detection)")
+        print(f"skip      {weights} (pip install ultralytics first, needed for phone detection)")

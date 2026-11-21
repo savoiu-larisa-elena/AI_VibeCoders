@@ -6,6 +6,9 @@
     Victory     "how am I doing?"       -> assistant gives a short status report of the drive
     Closed_Fist  ignored on purpose: hands gripping the steering wheel look like fists
 
+A hand that holds a drink or phone (box from the phone detector overlaps the hand) is
+ignored, and an open palm needs 4 STRAIGHT fingers - a cup grip is spread but curved.
+
 Accuracy (from live testing: fist was read as thumbs-up, palm was missed):
   1. MediaPipe's gesture model gives a first guess.
   2. A geometric check on the 21 hand landmarks (which fingers are extended, where the
@@ -37,7 +40,43 @@ WRIST = 0
 THUMB_MCP, THUMB_IP, THUMB_TIP = 2, 3, 4
 INDEX_MCP = 5
 FINGERS = [(6, 8), (10, 12), (14, 16), (18, 20)]   # (PIP, TIP) for index, middle, ring, pinky
+FINGER_CHAINS = [(5, 6, 7, 8), (9, 10, 11, 12), (13, 14, 15, 16), (17, 18, 19, 20)]  # MCP..TIP
 MIDDLE_MCP = 9
+STRAIGHT_RATIO = 0.85   # finger straightness needed for an open palm (1.0 = perfectly straight)
+
+
+def straight_fingers(lm, w: int, h: int) -> int:
+    """How many of the 4 fingers are STRAIGHT (not curved).
+    Straightness = MCP->tip distance / length along the finger joints.
+    Fingers wrapped around a cup are spread but curved (~0.6-0.8), an open palm is ~0.95."""
+    p = np.array([(q.x * w, q.y * h) for q in lm])
+    n = 0
+    for chain in FINGER_CHAINS:
+        along = sum(float(np.linalg.norm(p[a] - p[b])) for a, b in zip(chain, chain[1:]))
+        direct = float(np.linalg.norm(p[chain[0]] - p[chain[-1]]))
+        if along > 0 and direct / along >= STRAIGHT_RATIO:
+            n += 1
+    return n
+
+
+def hand_box(lm, w: int, h: int, pad: float = 0.15) -> tuple[float, float, float, float]:
+    xs = [q.x * w for q in lm]
+    ys = [q.y * h for q in lm]
+    bw, bh = max(xs) - min(xs), max(ys) - min(ys)
+    return min(xs) - pad * bw, min(ys) - pad * bh, max(xs) + pad * bw, max(ys) + pad * bh
+
+
+def holds_object(hbox, objects) -> str | None:
+    """Returns the label of an object the hand is holding (object box overlaps the hand)."""
+    hx1, hy1, hx2, hy2 = hbox
+    for o in objects:
+        ox1, oy1, ox2, oy2 = o["box"]
+        iw = max(0.0, min(hx2, ox2) - max(hx1, ox1))
+        ih = max(0.0, min(hy2, oy2) - max(hy1, oy1))
+        area = max(1.0, (ox2 - ox1) * (oy2 - oy1))
+        if iw * ih / area > 0.25:      # a quarter of the object lies inside the hand area
+            return o["label"]
+    return None
 
 
 def classify_geometry(lm, w: int, h: int) -> str | None:
@@ -60,7 +99,8 @@ def classify_geometry(lm, w: int, h: int) -> str | None:
     thumb_down = thumb_out and thumb_dy > 0.3 * palm
 
     if n_ext >= 4:
-        return "Open_Palm"
+        # spread AND straight; fingers curled around a cup are spread but curved
+        return "Open_Palm" if straight_fingers(lm, w, h) >= 4 else None
     if extended[0] and extended[1] and curled[2] and curled[3]:
         return "Victory"
     if extended[0] and curled[1] and curled[2] and curled[3]:
@@ -96,6 +136,11 @@ class GestureDetector(Detector):
         h, w = ctx.frame.shape[:2]
         best, best_score, debug = None, 0.0, []
         for i, lm in enumerate(res.hand_landmarks):
+            # a hand holding a drink/phone is busy, not gesturing
+            held = holds_object(hand_box(lm, w, h), ctx.objects)
+            if held:
+                debug.append(f"holding {held} -> ignored")
+                continue
             top = res.gestures[i][0] if i < len(res.gestures) and res.gestures[i] else None
             model_label = top.category_name if top and top.category_name != "None" else None
             model_score = top.score if top else 0.0
@@ -105,6 +150,9 @@ class GestureDetector(Detector):
                 label, score = geo, (model_score if model_label == geo else 0.7)
             elif model_label and model_score >= self.cfg.min_score.get(model_label, 0.75):
                 label, score = model_label, model_score
+                # the model alone also confuses a cup grip with an open palm
+                if label == "Open_Palm" and straight_fingers(lm, w, h) < 4:
+                    label, score = None, 0.0
             else:
                 label, score = None, 0.0
             debug.append(f"model={model_label or '-'} geo={geo or '-'}")

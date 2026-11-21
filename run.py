@@ -129,7 +129,8 @@ def main():
             # ---- debug overlay ----
             pipeline.draw(frame)
             now = time.monotonic()
-            fps = 0.9 * fps + 0.1 / max(now - last, 1e-6); last = now
+            inst = 1 / max(now - last, 1e-6); last = now
+            fps = inst if fps == 0 else 0.9 * fps + 0.1 * inst
             put(frame, f"FPS {fps:.0f}" + (f"   |   attention {context.attention:.0f}/100"
                                            if context else ""), 25)
             if signals["calibrating"]:
