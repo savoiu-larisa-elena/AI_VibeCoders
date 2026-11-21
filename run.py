@@ -104,11 +104,12 @@ def main():
 
         llm = LLMClient()
         speaker = Speaker(voice="troy")
-        speaker.prewarm([
-            "Please keep your eyes on the road.",
-            "Please put the phone down.",
-            "You seem drowsy. Consider taking a break.",
-])
+        speaker.prewarm(['Please keep your eyes on the road.',
+                         'Please put the phone down.',
+                         'You seem drowsy. Consider taking a break.',
+                         'Please return your attention to the road.',
+                         'You may be getting tired.',
+                         'Are you okay? Please respond.'])
         context = DriverContext()
         agent = Agent(context, on_reply, llm)
         print(f"LLM assistant ON: provider={llm.provider} model={llm.model}")

@@ -176,7 +176,10 @@ def camera_worker(args):
         speaker=Speaker(voice='troy')
         speaker.prewarm(['Please keep your eyes on the road.',
                          'Please put the phone down.',
-                         'You seem drowsy. Consider taking a break.'])
+                         'You seem drowsy. Consider taking a break.',
+                         'Please return your attention to the road.',
+                         'You may be getting tired.',
+                         'Are you okay? Please respond.'])
         def on_reply(r):                      # rulează în thread-ul agentului
             with lock:
                 state['latest_warning']=r.speak
