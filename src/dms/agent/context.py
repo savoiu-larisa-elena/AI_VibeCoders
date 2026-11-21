@@ -71,6 +71,7 @@ class DriverContext:
                 "looking": h.get("looking"),
                 "phone_in_hand": p.get("phone_visible", False),
                 "drinking": p.get("drink_visible", False),
+                "passengers": self.signals.get("occupants", {}).get("passengers", 0),
             },
             "counts_last_5min": {
                 t: self.count(t, 300)

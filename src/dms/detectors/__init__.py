@@ -2,6 +2,7 @@
 from .drowsiness import DrowsinessDetector
 from .gestures import GestureDetector
 from .head_pose import HeadPoseDetector
+from .occupants import OccupantsDetector
 
 
 def _phone():
@@ -15,4 +16,5 @@ DETECTORS = {
     "head_pose": lambda: HeadPoseDetector,
     "phone": _phone,
     "gestures": lambda: GestureDetector,
+    "occupants": lambda: OccupantsDetector,   # added automatically when face detection runs
 }

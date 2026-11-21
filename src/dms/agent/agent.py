@@ -30,6 +30,8 @@ Rules:
     phone -> put_phone_away;  distraction -> eyes_on_road;
     yawn / fatigue_perclos -> suggest_break;  eyes_closed -> eyes_on_road (level 1-2) or pull_over (level 3-4).
   Only use pull_over for fatigue at level 3-4.
+- If "passengers" > 0 and the trigger is fatigue at escalation_level 3-4, you may also ask
+  the passenger to help (keep the driver talking, help find a place to stop).
 - Only use numbers that appear in the JSON. Never invent times, counts or scores.
   "session_minutes" is the drive time (e.g. 0.4 = less than a minute).
 - Never repeat the exact wording from "previous_messages".

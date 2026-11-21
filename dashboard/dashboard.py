@@ -1,4 +1,11 @@
-"""AI VibeCoders live telemetry UI. Run: python dashboard.py --detectors drowsiness,head_pose,phone,gestures"""
+"""AI VibeCoders live telemetry UI.
+
+Run from the project root:
+    python dashboard/dashboard.py --detectors drowsiness,head_pose,phone,gestures          # no LLM (free)
+    python dashboard/dashboard.py --detectors drowsiness,head_pose,phone,gestures --llm    # with LLM assistant
+then open http://127.0.0.1:8000
+(This app uses the camera itself - don't run run.py at the same time.)
+"""
 from __future__ import annotations
 import argparse, json, sys, threading, time, uuid, csv, io
 from collections import deque
@@ -14,12 +21,21 @@ ROOT = DASHBOARD_DIR.parent  # main AI_VibeCoders project directory
 sys.path.insert(0, str(ROOT / 'src'))
 from dms.config import Config,LOGS_DIR
 from dms.pipeline import Pipeline
+from dms.agent import Agent, DriverContext, LLMClient
 
 app=FastAPI(title='VibeCoders Driver Telemetry')
 lock=threading.Lock()
-state={'camera':'starting','calibrating':True, 'assistant':None,'fps':0,'signals':{},'statuses':{},'events':[],
+log_lock=threading.Lock()   # camera thread and LLM thread both write the JSONL log
+state={'camera':'starting','calibrating':True,'fps':0,'signals':{},'statuses':{},'events':[],
        'latest_warning':'Waiting for events','frame':None,'session':'running',
-       'started_at':time.time(),'ended_at':None,'history':[], 'session_events':[], 'session_id':uuid.uuid4().hex[:12]}
+       'started_at':time.time(),'ended_at':None,'history':[], 'session_events':[], 'session_id':uuid.uuid4().hex[:12],
+       # LLM assistant
+       'attention':100,'llm':{'enabled':False,'provider':None,'model':None},
+       'assistant':None,'assistant_log':[],'muted_seconds':0,
+       # occupants + performance diagnostics
+       'driver_present':False,'passengers':0,'timing':{},'frame_id':0}
+STREAM_WIDTH=960        # browser video is downscaled: cheaper to encode, send and decode
+STREAM_QUALITY=70
 # Archived dashboard sessions are independent of the continuous JSONL detector logs.
 ARCHIVE_DIR=ROOT/'logs'/'dashboard_sessions'
 ARCHIVE_DIR.mkdir(parents=True,exist_ok=True)
@@ -64,9 +80,18 @@ def home():
     return FileResponse(HTML_FILE,media_type="text/html")
 
 @app.get('/state')
-def get_state():
+def get_state(since: float = -1.0, session_id: str = ''):
+    """Returns live state. History is sent incrementally: the page passes the last sample time
+    it already has (`since`) and only newer samples come back, so the payload stays small
+    even in long sessions. A different session_id means the page must reset its history."""
     with lock:
-        return {k:v for k,v in state.items() if k!='frame'}
+        out={k:v for k,v in state.items() if k not in ('frame','history')}
+        if session_id!=state['session_id']:
+            since=-1.0                      # new session (or first load): send everything
+        out['history']=[d for d in state['history'] if d['t']>since]
+        out['history_reset']=since<0
+        out['history_total']=len(state['history'])
+        return out
 
 @app.get('/sessions')
 def sessions():
@@ -95,7 +120,8 @@ def export_session_csv(session_id: str):
         raise HTTPException(status_code=404,detail='Session not found')
     data=json.loads(path.read_text(encoding='utf-8'))
     out=io.StringIO()
-    writer=csv.DictWriter(out,fieldnames=['t','perclos','ear','yaw','away'])
+    writer=csv.DictWriter(out,fieldnames=['t','perclos','ear','yaw','away','attention'],
+                          extrasaction='ignore')
     writer.writeheader()
     writer.writerows(data.get('history',[]))
     return Response(out.getvalue(),media_type='text/csv',headers={
@@ -132,12 +158,14 @@ def trigger_recalibrate():
 @app.get('/video')
 def video():
     def frames():
+        sent=-1
         while not stop.is_set():
             with lock:
-                frame=state['frame']
-            if frame:
+                frame,fid=state['frame'],state['frame_id']
+            if frame and fid!=sent:          # only send NEW frames (no duplicate JPEGs)
+                sent=fid
                 yield b'--frame\r\nContent-Type: image/jpeg\r\n\r\n'+frame+b'\r\n'
-            time.sleep(.06)
+            time.sleep(.03)
     return StreamingResponse(frames(),media_type='multipart/x-mixed-replace; boundary=frame')
 
 def number(v):
@@ -168,36 +196,65 @@ def camera_worker(args):
     cap.set(cv2.CAP_PROP_FRAME_WIDTH,config.camera.width)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT,config.camera.height)
     LOGS_DIR.mkdir(parents=True,exist_ok=True)
-    context=agent=speaker=None
-    if args.llm:
-        from dms.agent import Agent, DriverContext, LLMClient
-        from dms.voice import Speaker
-        PRIO={'info':1,'warning':2,'critical':3}
-        speaker=Speaker(voice='troy')
-        speaker.prewarm(['Please keep your eyes on the road.',
-                         'Please put the phone down.',
-                         'You seem drowsy. Consider taking a break.',
-                         'Please return your attention to the road.',
-                         'You may be getting tired.',
-                         'Are you okay? Please respond.'])
-        def on_reply(r):                      # rulează în thread-ul agentului
-            with lock:
-                state['latest_warning']=r.speak
-                state['assistant']={'speak':r.speak,'priority':r.priority,
-                                    'level':r.level,'action':r.action,
-                                    'note':r.dashboard_note,'source':r.source,
-                                    'ts':time.time()}
-            speaker.say(r.speak,PRIO.get(r.priority,1))
-        context=DriverContext()
-        agent=Agent(context,on_reply,LLMClient())
     path=LOGS_DIR/f'session_{datetime.now():%Y%m%d_%H%M%S_%f}.jsonl'
     last=time.monotonic()
     last_sample=0.0
+    fps=0.0
+    log=None
+    timing={}   # smoothed ms per part of the frame, shown on the dashboard
+
+    def smooth(key,ms):
+        timing[key]=ms if key not in timing else 0.85*timing[key]+0.15*ms
+    phone=next((d for d in pipeline.detectors if d.name=='phone'),None)
+
+    def write_log(line):
+        with log_lock:
+            if log is not None and not log.closed:   # a late LLM reply may arrive after shutdown
+                log.write(line+'\n'); log.flush()
+
+    # ---- driver context (attention score) always; LLM assistant only with --llm ----
+    context=DriverContext()
+    agent=None
+    if args.llm:
+        PRIO={'info':1,'warning':2,'critical':3}
+        speaker=None
+        try:
+            from dms.voice import Speaker
+            speaker=Speaker(voice='troy')
+            speaker.prewarm(['Please keep your eyes on the road.',
+                             'Please put the phone down.',
+                             'You seem drowsy. Consider taking a break.',
+                             'Please return your attention to the road.',
+                             'You may be getting tired.',
+                             'Are you okay? Please respond.'])
+        except Exception as exc:   # voice must never break the dashboard
+            print(f'[VOICE] disabled: {exc}',flush=True)
+        def on_reply(r):   # called from the agent's background thread
+            write_log(r.to_json())
+            item={'speak':r.speak,'priority':r.priority,'action':r.action,'note':r.dashboard_note,
+                  'trigger':r.trigger,'level':r.level,'source':r.source,
+                  'latency':round(r.latency,2),'error':r.error,'ts':r.ts}
+            with lock:
+                state['assistant']=item
+                state['assistant_log']=(state['assistant_log']+[item])[-20:]
+                state['latest_warning']=r.speak
+            if speaker:
+                speaker.say(r.speak,PRIO.get(r.priority,1))
+        try:
+            llm=LLMClient()
+            agent=Agent(context,on_reply,llm)
+            with lock:
+                state['llm']={'enabled':True,'provider':llm.provider,'model':llm.model}
+        except Exception as exc:   # missing key etc. -> keep running without LLM
+            with lock:
+                state['llm']={'enabled':False,'provider':None,'model':None,'error':str(exc)}
     try:
         # One continuous source log per server run, irrespective of UI session state.
         with path.open('a',encoding='utf8') as log:
             while not stop.is_set():
+                t0=time.perf_counter()
                 ok,frame=cap.read()
+                t1=time.perf_counter()
                 if not ok:
                     with lock:
                         state['camera']='unavailable'
@@ -209,28 +266,51 @@ def camera_worker(args):
                     pipeline.recalibrate()
                     recalibrate.clear()
                 signals,events=pipeline.process(frame)
+                t2=time.perf_counter()
                 pipeline.draw(frame)
-                success,encoded=cv2.imencode('.jpg',frame,[cv2.IMWRITE_JPEG_QUALITY,75])
+                h,w=frame.shape[:2]
+                small=cv2.resize(frame,(STREAM_WIDTH,int(h*STREAM_WIDTH/w))) if w>STREAM_WIDTH else frame
+                success,encoded=cv2.imencode('.jpg',small,[cv2.IMWRITE_JPEG_QUALITY,STREAM_QUALITY])
+                t3=time.perf_counter()
+                # where does the frame time go? camera wait / AI models / overlay+video
+                smooth('camera',(t1-t0)*1000)
+                smooth('ai',(t2-t1)*1000)
+                smooth('video',(t3-t2)*1000)
+                for k,v in pipeline.timing.items():
+                    smooth(k,v)
+                if phone:
+                    timing['objects_bg']=phone.last_run_ms
                 now=time.monotonic()
-                fps=1/max(now-last,1e-5)
+                inst=1/max(now-last,1e-5)
+                fps=inst if fps==0 else 0.9*fps+0.1*inst   # smoothed; starts at the real value
                 last=now
                 for event in events:
-                    log.write(event.to_json()+'\n')
-                if events:
-                    log.flush()
+                    write_log(event.to_json())
+                if not signals.get('calibrating'):
+                    context.update(signals,events)
+                    if agent:
+                        for event in events:
+                            agent.handle(event)   # returns immediately; LLM runs in background
                 with lock:
                     state['camera']='active'
                     state['calibrating']=bool(signals.get('calibrating'))
                     state['fps']=round(fps,1)
+                    state['attention']=round(context.attention)
+                    state['muted_seconds']=max(0,round(agent.snoozed_until-time.time())) if agent else 0
                     state['signals']=signals
                     state['statuses']={k:v.status for k,v in pipeline.outputs.items()}
+                    occ=signals.get('occupants') or {}
+                    state['driver_present']=bool(occ.get('driver_present'))
+                    state['passengers']=int(occ.get('passengers',0))
+                    state['timing']={k:round(v,1) for k,v in timing.items()}
                     if success:
                         state['frame']=encoded.tobytes()
+                        state['frame_id']+=1
                     for event in events:
                         item=json.loads(event.to_json())
                         state['events'].append(item)
-                        state['latest_warning']=FALLBACK.get(event.type,
-                            f'Driver safety event detected: {event.type.replace("_"," ")}.')
+                        if not agent and event.type in FALLBACK:   # with --llm the assistant writes the guidance
+                            state['latest_warning']=FALLBACK[event.type]
                         if state['session']=='running':
                             state['session_events'].append(item)
                     state['events']=state['events'][-100:]
@@ -244,15 +324,11 @@ def camera_worker(args):
                             'perclos':perclos*100 if perclos is not None else None,
                             'ear':number(d.get('ear')),
                             'yaw':number(hp.get('yaw')),
-                            'away':number(hp.get('away_seconds'))})
+                            'away':number(hp.get('away_seconds')),
+                            'attention':round(context.attention,1)})
                         if len(state['history'])>MAX_SAMPLES:
                             state['history']=state['history'][-MAX_SAMPLES:]
-                            last_sample=now
-
-                if agent and not signals.get('calibrating'):
-                    context.update(signals,events)
-                    for e in events:
-                        agent.handle(e)
+                        last_sample=now
     except Exception as exc:
         with lock:
             state['camera']='pipeline error'
@@ -267,7 +343,7 @@ if __name__=='__main__':
     parser.add_argument('--detectors',default='drowsiness,head_pose')
     parser.add_argument('--camera',type=int,default=None)
     parser.add_argument('--port',type=int,default=8000)
-    parser.add_argument('--llm',action='store_true')
+    parser.add_argument('--llm',action='store_true',help='enable the LLM assistant (key in .env; uses API quota)')
     args=parser.parse_args()
     threading.Thread(target=camera_worker,args=(args,),daemon=True).start()
     try:

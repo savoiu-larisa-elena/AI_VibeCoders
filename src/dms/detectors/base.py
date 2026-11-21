@@ -15,6 +15,9 @@ class FrameContext:
     calibrating: bool            # True during the first N seconds
     face: object | None = None   # FaceLandmarkerResult, if a detector needs "face"
     hands: object | None = None  # GestureRecognizerResult, if a detector needs "hands"
+    # objects seen by the phone detector: [{"label", "conf", "box": (x1,y1,x2,y2)}]
+    # (gestures uses it: a hand holding a drink/phone is not making a gesture)
+    objects: list = field(default_factory=list)
 
 
 @dataclass
@@ -27,6 +30,7 @@ class DetectorOutput:
 class Detector:
     name: str = "base"
     needs: set[str] = set()   # which providers to run: {"face"}, {"hands"}, or empty
+    order: int = 50           # lower runs first within a frame
 
     def __init__(self, config):
         self.config = config
