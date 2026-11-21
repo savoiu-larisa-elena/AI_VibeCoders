@@ -1,0 +1,5 @@
+# Python 3.12 (64-bit). Versions verified working together on Windows 11.
+opencv-python==5.1.0.95
+mediapipe==1.2.3        # Tasks API (the old mp.solutions API no longer exists)
+numpy==2.5.5
+ultralytics==8.4.216    # YOLO for phone/cup/bottle - pulls in PyTorch (~large download)

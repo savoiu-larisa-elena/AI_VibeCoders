@@ -1,0 +1,22 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Secrets - NEVER commit API keys (the repo is public)
+.env
+
+# Downloaded models (re-download with scripts/download_models.py)
+models/*
+!models/.gitkeep
+*.pt
+
+# Session logs
+logs/*
+!logs/.gitkeep
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
