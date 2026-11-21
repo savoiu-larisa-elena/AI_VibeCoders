@@ -31,10 +31,12 @@ sys.path.insert(0, str(Path(__file__).parent / "src"))
 from dms.config import LOGS_DIR, Config  # noqa: E402
 from dms.events import Severity  # noqa: E402
 from dms.pipeline import Pipeline  # noqa: E402
+from dms.voice import Speaker  # noqa: E402
 
 COLORS = {Severity.INFO: (255, 255, 0), Severity.WARNING: (0, 165, 255),
           Severity.CRITICAL: (0, 0, 255)}
 PRIORITY_COLORS = {"info": (255, 255, 0), "warning": (0, 165, 255), "critical": (0, 0, 255)}
+PRIO = {"info": 1, "warning": 2, "critical": 3}
 REPLY_SHOW_SECONDS = 8
 
 
@@ -85,7 +87,7 @@ def main():
                 log.write(line + "\n"); log.flush()
 
     # ---- optional LLM assistant ----
-    context = agent = None
+    context = agent = speaker = None
     latest_reply = {"reply": None, "shown_at": 0.0}
     if args.llm:
         from dms.agent import Agent, DriverContext, LLMClient
@@ -97,8 +99,16 @@ def main():
                   f"({tag})\n            \"{r.speak}\"\n            dashboard: {r.dashboard_note}")
             write_log(r.to_json())
             latest_reply.update(reply=r, shown_at=time.monotonic())
+            if speaker:
+                speaker.say(r.speak, PRIO.get(r.priority, 1))
 
         llm = LLMClient()
+        speaker = Speaker(voice="troy")
+        speaker.prewarm([
+            "Please keep your eyes on the road.",
+            "Please put the phone down.",
+            "You seem drowsy. Consider taking a break.",
+])
         context = DriverContext()
         agent = Agent(context, on_reply, llm)
         print(f"LLM assistant ON: provider={llm.provider} model={llm.model}")

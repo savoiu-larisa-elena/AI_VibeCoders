@@ -7,3 +7,6 @@ openai==3.57.0          # LLM client - also works with Groq / Gemini / Ollama (O
 python-dotenv==1.2.4    # reads API keys from .env
 fastapi
 uvicorn
+pygame-ce       # audio playback (drop-in for pygame, has wheels for new Python)
+pyttsx3         # offline voice fallback if Groq TTS is unavailable
+requests        # Groq TTS HTTP call

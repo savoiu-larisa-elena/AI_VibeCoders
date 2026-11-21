@@ -17,7 +17,7 @@ from dms.pipeline import Pipeline
 
 app=FastAPI(title='VibeCoders Driver Telemetry')
 lock=threading.Lock()
-state={'camera':'starting','calibrating':True,'fps':0,'signals':{},'statuses':{},'events':[],
+state={'camera':'starting','calibrating':True, 'assistant':None,'fps':0,'signals':{},'statuses':{},'events':[],
        'latest_warning':'Waiting for events','frame':None,'session':'running',
        'started_at':time.time(),'ended_at':None,'history':[], 'session_events':[], 'session_id':uuid.uuid4().hex[:12]}
 # Archived dashboard sessions are independent of the continuous JSONL detector logs.
@@ -168,6 +168,25 @@ def camera_worker(args):
     cap.set(cv2.CAP_PROP_FRAME_WIDTH,config.camera.width)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT,config.camera.height)
     LOGS_DIR.mkdir(parents=True,exist_ok=True)
+    context=agent=speaker=None
+    if args.llm:
+        from dms.agent import Agent, DriverContext, LLMClient
+        from dms.voice import Speaker
+        PRIO={'info':1,'warning':2,'critical':3}
+        speaker=Speaker(voice='troy')
+        speaker.prewarm(['Please keep your eyes on the road.',
+                         'Please put the phone down.',
+                         'You seem drowsy. Consider taking a break.'])
+        def on_reply(r):                      # rulează în thread-ul agentului
+            with lock:
+                state['latest_warning']=r.speak
+                state['assistant']={'speak':r.speak,'priority':r.priority,
+                                    'level':r.level,'action':r.action,
+                                    'note':r.dashboard_note,'source':r.source,
+                                    'ts':time.time()}
+            speaker.say(r.speak,PRIO.get(r.priority,1))
+        context=DriverContext()
+        agent=Agent(context,on_reply,LLMClient())
     path=LOGS_DIR/f'session_{datetime.now():%Y%m%d_%H%M%S_%f}.jsonl'
     last=time.monotonic()
     last_sample=0.0
@@ -225,7 +244,12 @@ def camera_worker(args):
                             'away':number(hp.get('away_seconds'))})
                         if len(state['history'])>MAX_SAMPLES:
                             state['history']=state['history'][-MAX_SAMPLES:]
-                        last_sample=now
+                            last_sample=now
+
+                if agent and not signals.get('calibrating'):
+                    context.update(signals,events)
+                    for e in events:
+                        agent.handle(e)
     except Exception as exc:
         with lock:
             state['camera']='pipeline error'
@@ -240,6 +264,7 @@ if __name__=='__main__':
     parser.add_argument('--detectors',default='drowsiness,head_pose')
     parser.add_argument('--camera',type=int,default=None)
     parser.add_argument('--port',type=int,default=8000)
+    parser.add_argument('--llm',action='store_true')
     args=parser.parse_args()
     threading.Thread(target=camera_worker,args=(args,),daemon=True).start()
     try:
