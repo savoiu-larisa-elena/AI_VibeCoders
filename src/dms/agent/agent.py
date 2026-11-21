@@ -65,6 +65,25 @@ FALLBACKS = {
 }
 
 
+NAMES = {"eyes_closed": "eye closure", "yawn": "yawn", "distraction": "distraction",
+         "phone": "phone alert", "fatigue_perclos": "fatigue warning",
+         "hands_off_wheel": "hands-off-wheel alert"}
+
+
+def local_status_report(payload: dict) -> str:
+    """Status report built from the real numbers - used when the LLM is unavailable,
+    so the driver still gets an answer instead of 'not available'."""
+    st = payload.get("driver_state", {})
+    minutes = payload.get("session_minutes", 0) or 0
+    drive = f"{round(minutes)} minutes" if minutes >= 1 else "less than a minute"
+    counts = payload.get("counts_session", {}) or {}
+    parts = [f"{n} {NAMES.get(k, k.replace('_', ' '))}{'s' if n > 1 else ''}"
+             for k, n in sorted(counts.items(), key=lambda kv: -kv[1])[:3]]
+    alerts = ("So far: " + ", ".join(parts) + ".") if parts else "No alerts so far."
+    return (f"Status: driving for {drive}, attention {st.get('attention_score', 'unknown')} "
+            f"out of 100. {alerts} Keep your eyes on the road.")
+
+
 @dataclass
 class Reply:
     speak: str
@@ -213,5 +232,7 @@ class Agent:
             key = payload["trigger"].get("meaning", ev.type)
             text, priority, action = FALLBACKS.get(key, ("Please stay focused on the road.",
                                                              ev.severity.value, "eyes_on_road"))
+            if key == "status_report":
+                text = local_status_report(payload)   # real numbers, no LLM needed
             return Reply(text, priority, action, f"fallback: {ev.type}", ev.type, level,
                          "fallback", error=str(e)[:200])

@@ -149,8 +149,8 @@ python run.py --camera 1                # try another camera index
 | Detector | Signal / rule | Default event trigger |
 |---|---|---|
 | **Drowsiness** | Eye aspect ratio against calibrated baseline; PERCLOS; mouth aspect ratio | Eyes closed **≥ 1.0 s**, PERCLOS **≥ 25% in a 60 s window**, or mouth open **≥ 1.2 s** |
-| **Head pose** | Yaw / pitch relative to the calibrated forward pose; gaze-down cues | Looking away **≥ 2 s** (down = critical) |
-| **Phone / drink** | YOLO11s detections inside an approximate driver zone, with temporal voting; a "phone" covered by a flat hand (straight fingers) is rejected | Phone: **3 of 5** recent YOLO passes; drink: **2 of 5** (often half-hidden by the hand); sustained **≥ 1 s**. **Phone call pose:** a driver hand held at the ear for **2 s** counts as a phone call even if the phone is hidden |
+| **Head pose** | Yaw / pitch relative to the calibrated forward pose; gaze-down cues | Looking away **≥ 2 s** (down = critical). |
+| **Phone / drink** | YOLO11s detections inside an approximate driver zone, with temporal voting; a "phone" covered by a flat hand (straight fingers) is rejected | Phone: **3 of 5** recent YOLO passes; drink: **2 of 5** (often half-hidden by the hand); sustained **≥ 1 s**. Optional **phone call pose** (off by default, `call_pose_enabled`): hand at the ear for 2 s + a phone seen near the head in 3 separate checks |
 | **Gestures** | Gesture model + landmark geometry check, majority vote | Same gesture in **6 of 10** frames, then held **1.8 s** (open palm) or **1.0 s** (others) |
 
 Thresholds are **demo configuration**, not automotive-certified safety limits. Adjust them in [`src/dms/config.py`](src/dms/config.py). A **5-second event cooldown** prevents repetitive notifications. **Driver vs. passenger:** the driver is the face closest to the driver's seat (left side of the image, `driver_seat_x` in the config) at calibration; only the driver's hands can make gestures; after that the system follows that seat position and ignores faces elsewhere (a passenger leaning in is not taken as the driver). Press **RECALIBRATE** to lock onto a new driver. This is a position heuristic, not identity recognition. Calibration only counts time while a face is visible. **Recalibration** happens on the RECALIBRATE button, automatically after the driver's seat was empty for 15 s (driver change), and as a 10-minute background baseline refresh that only runs while the driver is alert (a tired face is never learned as "normal"). Head-down posture suppresses misleading eye-closure interpretation.
@@ -198,7 +198,7 @@ CV event → agent rules (cooldown, escalation level) → compact JSON summary
 - **Reliability:** the LLM runs in a background thread — the camera never waits for the network.
 - **Privacy:** no camera footage leaves the laptop; only a few hundred characters of event metadata.
 - **Honesty:** the prompt forbids inventing numbers; the LLM may only use values present in the JSON.
-- Provider is set in `.env` (`LLM_PROVIDER=groq | gemini | ollama`).
+- **Automatic failover:** `LLM_PROVIDER` (in `.env`) is tried first; when a free-tier limit is hit the app switches by itself: Groq `gpt-oss-20b` → Groq `gpt-oss-120b` (Groq limits are per model) → extra Groq keys (`GROQ_API_KEY_2`, from another account) → Gemini `gemini-flash-lite-latest` (`GEMINI_API_KEY`) → pre-written messages. The terminal prints `[LLM] now using …` and the dashboard shows the provider that answered. The ✌️ status report is built from the real numbers when no LLM is available.
 
 ## 🗂️ Garage layout — repository map
 

@@ -60,6 +60,11 @@ class HeadPoseConfig:
     away_alert_seconds: float = 2.0     # looking away this long -> event
     yaw_sign: int = 1                   # flip to -1 if LEFT/RIGHT come out swapped
     pitch_sign: int = 1                 # flip to -1 if UP/DOWN come out swapped
+    # A face turned far from the camera is not detected at all. If the driver's face was
+    # visible and then disappears, the driver most likely turned away -> keep timing
+    # 'looking away' (last known direction). After this long it counts as 'seat empty'.
+    face_lost_counts_as_away: bool = True
+    face_lost_max_seconds: float = 12.0
 
 
 @dataclass
@@ -84,11 +89,21 @@ class PhoneConfig:
     # Fingers held together look like a phone to YOLO. A hand HOLDING a phone has curled
     # fingers; if the "phone" overlaps a FLAT hand (this many straight fingers) it's the hand.
     flat_hand_straight_fingers: int = 3
+    flat_hand_max_conf: float = 0.75   # only unsure 'phones' can be a flat hand; a real phone scores higher
     driver_zone_only: bool = True
     driver_zone_scale: float = 1.6   # zone = face box widened by this many face-widths each side
     # Phone at the ear is mostly hidden by the hand, so YOLO often misses it. A driver hand
     # held at the ear this long counts as a phone call even without seeing the phone.
+    # A hand at the ear alone gave false alarms (hand + head forming a 'phone' shape), so the
+    # pose also needs EVIDENCE of a phone: YOLO must see a phone near the head at least once
+    # during the pose (weak detections count - a phone at the ear is mostly hidden).
+    # Live tests: YOLO also sees the GAP between hand and head/neck as a weak 'phone', so
+    # this rule gave more false alarms than real catches -> OFF by default. Phones are then
+    # only detected when YOLO sees them clearly (min_conf, votes). Set True to try again.
+    call_pose_enabled: bool = False
     call_pose_seconds: float = 2.0
+    call_evidence_conf: float = 0.35    # 'phone' near the head must be at least this sure...
+    call_evidence_runs: int = 3         # ...in this many separate YOLO checks during the pose
     call_pose_distance: float = 0.6  # hand within this many face-widths of an ear
 
 
@@ -96,18 +111,24 @@ class PhoneConfig:
 class GestureConfig:
     # model-only confidence needed when the geometric check is unsure
     min_score: dict = field(default_factory=lambda: {
-        "Thumb_Up": 0.80, "Thumb_Down": 0.80, "Open_Palm": 0.75, "Victory": 0.70})
+        "Thumb_Up": 0.80, "Thumb_Down": 0.80, "Open_Palm": 0.60, "Victory": 0.70})
     # open palm needs 4 fingers at least this straight (1.0 = perfectly straight). A hand
     # holding a phone with spread fingers is spread but less straight.
-    open_palm_straightness: float = 0.90
+    # 0.90 / 4 fingers was too strict in live tests (real fingers are rarely that straight;
+    # the palm was missed and the model guessed 'thumbs up'). Holding a phone is handled
+    # separately (hand overlapping a phone / driver on the phone -> no open palm).
+    open_palm_straightness: float = 0.85
+    open_palm_min_straight: int = 3      # at least this many fingers that straight
     vote_window: int = 10       # look at the last 10 frames...
     votes_needed: int = 6       # ...the same gesture must win at least 6 of them
     # ...then be held this long to count. Open palm (mute) is the riskiest to trigger by
     # accident - hands open naturally - so it needs the longest hold.
     hold_seconds: dict = field(default_factory=lambda: {
-        "Open_Palm": 1.8, "Thumb_Up": 1.0, "Thumb_Down": 1.0, "Victory": 1.0})
+        "Open_Palm": 1.5, "Thumb_Up": 1.0, "Thumb_Down": 1.0, "Victory": 1.0})
     # gestures that trigger something (fist is ignored: hands on the wheel look like fists)
     active: tuple = ("Thumb_Up", "Open_Palm", "Thumb_Down", "Victory")
+    # write why each hand was accepted/rejected to logs/gesture_debug.jsonl (for tuning)
+    debug_log: bool = True
 
 
 @dataclass

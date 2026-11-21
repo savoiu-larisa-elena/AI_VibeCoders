@@ -31,12 +31,14 @@ class HeadPoseDetector(Detector):
         self.baseline: tuple[float, float] | None = None
         self._away_since: float | None = None
         self._alerted = False
+        self._last_face_ts: float | None = None   # last time the driver's face was visible
+        self._last_yaw = 0.0
+        self._last_dir = "road"
 
     def process(self, ctx: FrameContext) -> DetectorOutput:
         out = DetectorOutput()
         if not ctx.face or not ctx.face.facial_transformation_matrixes:
-            out.status = "head_pose: no face"
-            return out
+            return self._face_lost(ctx, out)
 
         pitch, yaw, roll = matrix_to_euler(ctx.face.facial_transformation_matrixes[0])
 
@@ -85,14 +87,41 @@ class HeadPoseDetector(Detector):
             out.events.append(Event("distraction", sev, self.name,
                                     data={"direction": direction, "seconds": round(away_for, 2)}))
 
+        self._last_face_ts, self._last_yaw, self._last_dir = ctx.ts, rel_yaw, direction
         out.signals = {
             "pitch": round(rel_pitch, 1), "yaw": round(rel_yaw, 1), "roll": round(roll, 1),
-            "looking": direction, "away_seconds": round(away_for, 2),
+            "looking": direction, "away_seconds": round(away_for, 2), "face_visible": True,
             "gaze_down": round(gaze_down, 2),
         }
         out.status = (f"yaw {rel_yaw:+.0f}  pitch {rel_pitch:+.0f}  roll {roll:+.0f}  "
                       f"gazeDown {gaze_down:.2f} -> "
                       f"{direction.upper()}" + (f" ({away_for:.1f}s)" if away_for else ""))
+        return out
+
+    def _face_lost(self, ctx: FrameContext, out: DetectorOutput) -> DetectorOutput:
+        """Driver's face not detected. Right after it was visible this almost always means
+        the head is turned too far for the camera -> keep timing 'looking away'."""
+        recent = (self._last_face_ts is not None
+                  and ctx.ts - self._last_face_ts <= self.cfg.face_lost_max_seconds)
+        if not (self.cfg.face_lost_counts_as_away and recent and self.baseline is not None
+                and not (ctx.calibrating and not ctx.soft_calibrating)):
+            self._away_since, self._alerted = None, False
+            out.status = "head_pose: no face"
+            return out
+        if self._last_dir != "road":
+            direction = self._last_dir
+        else:
+            direction = "left" if self._last_yaw > 8 else "right" if self._last_yaw < -8 else "away"
+        self._away_since = self._away_since or ctx.ts
+        away_for = ctx.ts - self._away_since
+        if away_for >= self.cfg.away_alert_seconds and not self._alerted:
+            self._alerted = True
+            out.events.append(Event("distraction", Severity.WARNING, self.name,
+                                    data={"direction": direction, "seconds": round(away_for, 2),
+                                          "face_turned_away": True}))
+        out.signals = {"looking": direction, "away_seconds": round(away_for, 2),
+                       "face_visible": False}
+        out.status = f"face turned away ({direction}) {away_for:.1f}s"
         return out
 
     def draw(self, frame, ctx, out):

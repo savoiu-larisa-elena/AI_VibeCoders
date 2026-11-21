@@ -21,6 +21,8 @@ Accuracy (from live testing: fist was read as thumbs-up, palm was missed):
 """
 from __future__ import annotations
 
+import json
+import time
 from collections import Counter, deque
 
 import cv2
@@ -48,7 +50,8 @@ FINGERS = [(6, 8), (10, 12), (14, 16), (18, 20)]   # (PIP, TIP) for index, middl
 FINGER_CHAINS = [(5, 6, 7, 8), (9, 10, 11, 12), (13, 14, 15, 16), (17, 18, 19, 20)]  # MCP..TIP
 MIDDLE_MCP = 9
 STRAIGHT_RATIO = 0.85   # default finger straightness (1.0 = perfectly straight)
-PALM_STRAIGHTNESS = 0.90  # stricter, for the open palm (config.gesture.open_palm_straightness)
+PALM_STRAIGHTNESS = 0.85  # for the open palm (config.gesture.open_palm_straightness)
+PALM_MIN_STRAIGHT = 3     # fingers that must be that straight (config.gesture.open_palm_min_straight)
 
 
 def straight_fingers(lm, w: int, h: int, ratio: float = STRAIGHT_RATIO) -> int:
@@ -85,7 +88,15 @@ def holds_object(hbox, objects) -> str | None:
     return None
 
 
-def classify_geometry(lm, w: int, h: int, palm_straightness: float = PALM_STRAIGHTNESS) -> str | None:
+def extended_fingers(lm, w: int, h: int) -> int:
+    """How many of the 4 fingers point away from the wrist (not folded)."""
+    p = np.array([(q.x * w, q.y * h) for q in lm])
+    d = lambda a, b: float(np.linalg.norm(p[a] - p[b]))  # noqa: E731
+    return sum(d(WRIST, tip) > 1.1 * d(WRIST, pip) for pip, tip in FINGERS)
+
+
+def classify_geometry(lm, w: int, h: int, palm_straightness: float = PALM_STRAIGHTNESS,
+                      palm_min_straight: int = PALM_MIN_STRAIGHT) -> str | None:
     """Rule-based gesture from landmark positions. Returns None when unsure."""
     p = np.array([(q.x * w, q.y * h) for q in lm])
     dist = lambda a, b: float(np.linalg.norm(p[a] - p[b]))  # noqa: E731
@@ -106,7 +117,8 @@ def classify_geometry(lm, w: int, h: int, palm_straightness: float = PALM_STRAIG
 
     if n_ext >= 4:
         # spread AND straight; fingers curled around a cup are spread but curved
-        return "Open_Palm" if straight_fingers(lm, w, h, palm_straightness) >= 4 else None
+        return ("Open_Palm" if straight_fingers(lm, w, h, palm_straightness) >= palm_min_straight
+                else None)
     if extended[0] and extended[1] and curled[2] and curled[3]:
         return "Victory"
     if extended[0] and curled[1] and curled[2] and curled[3]:
@@ -133,6 +145,25 @@ class GestureDetector(Detector):
         self._since = 0.0
         self._emitted = False
         self._debug = ""
+        self._log = None
+        self._last_log = 0.0
+        if self.cfg.debug_log:
+            from ..config import LOGS_DIR
+            LOGS_DIR.mkdir(exist_ok=True)
+            self._log = open(LOGS_DIR / f"gesture_debug_{time.strftime('%Y%m%d_%H%M%S')}.jsonl",
+                             "w", encoding="utf-8")
+
+    def _write_debug(self, ts: float, records: list) -> None:
+        """Max 5 lines/s: what each hand looked like and why it was accepted/rejected."""
+        if not self._log or not records or ts - self._last_log < 0.2:
+            return
+        self._last_log = ts
+        self._log.write(json.dumps({"t": round(ts, 2), "hands": records}) + "\n")
+        self._log.flush()
+
+    def close(self):
+        if self._log:
+            self._log.close()
 
     def _frame_label(self, ctx: FrameContext) -> tuple[str | None, float]:
         res = ctx.hands
@@ -140,41 +171,57 @@ class GestureDetector(Detector):
             self._debug = ""
             return None, 0.0
         h, w = ctx.frame.shape[:2]
-        best, best_score, debug = None, 0.0, []
+        best, best_score, debug, records = None, 0.0, [], []
         # only the driver may give commands: hands outside the driver's area (= passenger's)
         # are ignored; no driver visible -> no gestures at all
         zone = driver_zone(ctx.face, w, h, 1.6)
         palm_ratio = self.cfg.open_palm_straightness
+        palm_min = self.cfg.open_palm_min_straight
         for i, lm in enumerate(res.hand_landmarks):
+            top = res.gestures[i][0] if i < len(res.gestures) and res.gestures[i] else None
+            rec = {"model": top.category_name if top else None,
+                   "score": round(top.score, 2) if top else 0,
+                   "straight": straight_fingers(lm, w, h, palm_ratio),
+                   "extended": extended_fingers(lm, w, h)}
+            records.append(rec)
             if zone is None or not in_box(lm[9].x * w, lm[9].y * h, zone):
                 debug.append("not the driver's hand -> ignored")
+                rec["result"] = "ignored: outside driver zone" if zone else "ignored: no driver face"
                 continue
             # a hand holding a drink/phone is busy, not gesturing
             held = holds_object(hand_box(lm, w, h), ctx.objects)
             if held:
                 debug.append(f"holding {held} -> ignored")
+                rec["result"] = f"ignored: holding {held}"
                 continue
-            top = res.gestures[i][0] if i < len(res.gestures) and res.gestures[i] else None
             model_label = top.category_name if top and top.category_name != "None" else None
             model_score = top.score if top else 0.0
-            geo = classify_geometry(lm, w, h, palm_ratio)
+            geo = classify_geometry(lm, w, h, palm_ratio, palm_min)
             if geo:
                 # geometry is the referee: it agrees -> keep model confidence; disagrees -> trust geometry
                 label, score = geo, (model_score if model_label == geo else 0.7)
             elif model_label and model_score >= self.cfg.min_score.get(model_label, 0.75):
                 label, score = model_label, model_score
                 # the model alone also confuses a cup grip with an open palm
-                if label == "Open_Palm" and straight_fingers(lm, w, h, palm_ratio) < 4:
+                if label == "Open_Palm" and straight_fingers(lm, w, h, palm_ratio) < palm_min:
+                    label, score = None, 0.0
+                # the model guessed 'thumbs up/down' for open hands: a real thumbs up has
+                # the 4 fingers folded, so with 2+ fingers extended it can't be one
+                if label in ("Thumb_Up", "Thumb_Down") and extended_fingers(lm, w, h) >= 2:
                     label, score = None, 0.0
             else:
                 label, score = None, 0.0
+            rec["geo"] = geo
             if label == "Open_Palm" and ctx.phone_busy:
                 debug.append("on the phone -> open palm ignored")
+                rec["result"] = "ignored: on the phone"
                 continue
+            rec["result"] = label or "no gesture"
             debug.append(f"model={model_label or '-'} geo={geo or '-'}")
             if label and score > best_score:
                 best, best_score = label, score
         self._debug = " | ".join(debug)
+        self._write_debug(ctx.ts, records)
         return best, best_score
 
     def process(self, ctx: FrameContext) -> DetectorOutput:

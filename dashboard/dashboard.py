@@ -224,6 +224,7 @@ def camera_worker(args):
     path=LOGS_DIR/f'session_{datetime.now():%Y%m%d_%H%M%S_%f}.jsonl'
     last_sample=0.0
     fps_counter=FpsCounter()
+    bad_frames=0          # consecutive frames that failed (see camera loop)
     log=None
     timing={}   # smoothed ms per part of the frame, shown on the dashboard
 
@@ -261,6 +262,8 @@ def camera_worker(args):
                 state['assistant']=item
                 state['assistant_log']=(state['assistant_log']+[item])[-20:]
                 state['latest_warning']=r.speak
+                if r.source=='llm':   # show which provider answered (it can fail over)
+                    state['llm']={'enabled':True,'provider':llm.provider,'model':llm.model}
                 voice_on=state['voice']['enabled']
             if speaker and voice_on:
                 speaker.say(r.speak,PRIO.get(r.priority,1))
@@ -290,9 +293,17 @@ def camera_worker(args):
                 if recalibrate.is_set():
                     pipeline.recalibrate()
                     recalibrate.clear()
-                signals,events=pipeline.process(frame)
+                try:
+                    signals,events=pipeline.process(frame)
+                    pipeline.draw(frame)
+                    bad_frames=0
+                except Exception as exc:   # one bad frame must not stop the camera loop
+                    bad_frames+=1
+                    print(f'[CAMERA] frame skipped ({type(exc).__name__}: {str(exc)[:120]})',flush=True)
+                    if bad_frames>=30:     # keeps failing -> give up and show the error
+                        raise
+                    continue
                 t2=time.perf_counter()
-                pipeline.draw(frame)
                 h,w=frame.shape[:2]
                 small=cv2.resize(frame,(STREAM_WIDTH,int(h*STREAM_WIDTH/w))) if w>STREAM_WIDTH else frame
                 success,encoded=cv2.imencode('.jpg',small,[cv2.IMWRITE_JPEG_QUALITY,STREAM_QUALITY])

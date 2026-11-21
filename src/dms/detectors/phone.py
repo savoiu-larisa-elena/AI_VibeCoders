@@ -7,8 +7,9 @@ Robustness tricks (from live testing):
   * temporal voting -> phone must appear in 3 of the last 5 YOLO runs, drink in 2 of 5
   * driver zone -> objects far from the driver's face (passenger's can) are ignored
   * flat-hand check -> fingers held together (straight) are not a phone
-  * call pose -> a driver hand held at the ear for 2 s = phone call, even if the phone
-    itself is hidden behind the hand (YOLO often misses a phone at the ear)
+  * call pose (OFF by default, config.phone.call_pose_enabled) -> hand at the ear for 2 s
+    + a phone seen near the head in 3 separate YOLO checks = phone call. Off because YOLO
+    also sees the gap between hand and head/neck as a weak 'phone'.
   * YOLO runs in its own background thread -> the video never waits for it
 """
 from __future__ import annotations
@@ -45,10 +46,11 @@ EARS = (234, 454)                       # face-mesh points at the left/right sid
 HAND_POINTS = (0, 4, 5, 8, 9, 12, 13, 17)  # wrist, knuckles, fingertips
 
 
-def hand_at_ear(face_result, hands, w: int, h: int, max_dist: float) -> bool:
-    """True if a hand is held next to one of the driver's ears (phone-call pose)."""
+def hand_at_ear(face_result, hands, w: int, h: int, max_dist: float):
+    """The hand held next to one of the driver's ears (phone-call pose), or None.
+    (Truthy/falsy, so `if hand_at_ear(...)` still works.)"""
     if not face_result or not face_result.face_landmarks or not hands:
-        return False
+        return None
     lm = face_result.face_landmarks[0]
     x1, _, x2, _ = face_box(lm, w, h)
     limit = max_dist * max(1, x2 - x1)
@@ -57,7 +59,24 @@ def hand_at_ear(face_result, hands, w: int, h: int, max_dist: float) -> bool:
         for i in HAND_POINTS:
             hx, hy = hand[i].x * w, hand[i].y * h
             if any(((hx - ex) ** 2 + (hy - ey) ** 2) ** 0.5 < limit for ex, ey in ears):
-                return True
+                return hand
+    return None
+
+
+def phone_near_head(boxes, face_result, w: int, h: int, min_conf: float) -> bool:
+    """A (possibly weak) YOLO 'phone' box close to the driver's head = evidence of a call."""
+    if not face_result or not face_result.face_landmarks:
+        return False
+    x1, y1, x2, y2 = face_box(face_result.face_landmarks[0], w, h)
+    fw = max(1, x2 - x1)
+    near = (x1 - 1.2 * fw, y1 - 0.5 * fw, x2 + 1.2 * fw, y2 + 0.5 * fw)
+    for b in boxes:
+        if b["label"] != "phone" or b["conf"] < min_conf:
+            continue
+        bx1, by1, bx2, by2 = b["box"]
+        cx, cy = (bx1 + bx2) / 2, (by1 + by2) / 2
+        if near[0] <= cx <= near[2] and near[1] <= cy <= near[3]:
+            return True
     return False
 
 
@@ -82,6 +101,7 @@ class PhoneDetector(Detector):
         self._seen_since: dict[str, float] = {}
         self._alerted: set[str] = set()
         self._ear_since: float | None = None   # hand at the ear since (phone-call pose)
+        self._evidence_runs = 0                  # YOLO checks that saw a phone near the head
         self.call_pose = False
         # background worker: takes the newest frame, runs YOLO, publishes the result
         self._lock = threading.Lock()
@@ -118,7 +138,13 @@ class PhoneDetector(Detector):
                 self._stop.wait(rest)
 
     def _run_yolo(self, frame, zone):
-        result = self.model(frame, conf=min(self.cfg.min_conf.values()),
+        # low YOLO threshold: weak 'phone' boxes are kept (status 'low') as call evidence
+        # weak boxes are only needed as call-pose evidence; otherwise a low threshold just
+        # produces 'phone' boxes on flat hands, which then blocked the open palm
+        min_c = min(self.cfg.min_conf.values())
+        if self.cfg.call_pose_enabled:
+            min_c = min(min_c, self.cfg.call_evidence_conf)
+        result = self.model(frame, conf=min_c,
                             classes=list(self.cfg.classes), agnostic_nms=True,
                             verbose=False)[0]
         found: dict[str, float] = {}
@@ -159,7 +185,8 @@ class PhoneDetector(Detector):
             if hands:
                 h, w = ctx.frame.shape[:2]
                 for b in self._boxes:
-                    if (b["label"] == "phone" and b["status"] == "ok" and
+                    if (b["label"] == "phone" and b["status"] == "ok"
+                            and b["conf"] < self.cfg.flat_hand_max_conf and
                             flat_hand_over(b["box"], hands, w, h,
                                            self.cfg.flat_hand_straight_fingers)):
                         b["status"] = "flat hand"          # drawn grey, not counted
@@ -168,19 +195,27 @@ class PhoneDetector(Detector):
                     if b["status"] == "ok":
                         found[b["label"]] = max(found.get(b["label"], 0), b["conf"])
             self._votes.append(found)
-        # share what's in the driver's hands with the gesture detector (flat-hand boxes too:
-        # a hand holding a phone with spread fingers must not count as an open palm)
-        ctx.objects = [b for b in self._boxes if b["status"] in ("ok", "low", "flat hand")]
+        # share what's in the driver's hands with the gesture detector: only CONFIDENT objects.
+        # Weak or 'flat hand' boxes are often the open hand itself and blocked the open palm.
+        ctx.objects = [b for b in self._boxes if b["status"] == "ok"]
 
         # phone-call pose: driver's hand at the ear for call_pose_seconds
         h, w = ctx.frame.shape[:2]
         hands = ctx.hands.hand_landmarks if ctx.hands else []
-        at_ear = hand_at_ear(ctx.face, hands, w, h, self.cfg.call_pose_distance)
+        ear_hand = hand_at_ear(ctx.face, hands, w, h, self.cfg.call_pose_distance)
+        at_ear = ear_hand is not None
         if at_ear:
-            self._ear_since = self._ear_since or ctx.ts
+            if self._ear_since is None:
+                self._ear_since, self._evidence_runs = ctx.ts, 0
+            # evidence = several separate YOLO checks saw a phone near the head (the gap
+            # between hand and head can fool a single weak check)
+            if new and phone_near_head(self._boxes, ctx.face, w, h, self.cfg.call_evidence_conf):
+                self._evidence_runs += 1
         else:
-            self._ear_since = None
-        self.call_pose = bool(at_ear and ctx.ts - self._ear_since >= self.cfg.call_pose_seconds)
+            self._ear_since, self._evidence_runs = None, 0
+        self.call_pose = bool(self.cfg.call_pose_enabled and at_ear
+                              and self._evidence_runs >= self.cfg.call_evidence_runs
+                              and ctx.ts - self._ear_since >= self.cfg.call_pose_seconds)
 
         # a label is "confirmed" only if it appeared in enough recent YOLO runs
         confirmed: dict[str, float] = {}
@@ -191,8 +226,9 @@ class PhoneDetector(Detector):
         via_pose = self.call_pose and "phone" not in confirmed
         if via_pose:
             confirmed["phone"] = 0.6          # hand at the ear long enough: treat as a call
-        # a hand on the phone (or at the ear) is busy - gestures ignore the open palm
-        ctx.phone_busy = "phone" in confirmed or at_ear
+        # driver is on the phone -> gestures ignore the open palm. A hand near the ear alone
+        # doesn't count: raising an open palm next to the face is exactly that position.
+        ctx.phone_busy = "phone" in confirmed
 
         for label in self.labels:
             if label in confirmed:
@@ -214,7 +250,7 @@ class PhoneDetector(Detector):
         out.signals["call_pose"] = self.call_pose
         out.status = "objects: " + (", ".join(f"{k} {v:.0%}" for k, v in confirmed.items())
                                     or "none")
-        if at_ear:
+        if at_ear and self.cfg.call_pose_enabled:
             out.status += (" | PHONE CALL POSE" if self.call_pose
                            else f" | hand at ear {ctx.ts - self._ear_since:.1f}s")
         return out

@@ -30,6 +30,11 @@ class FaceProvider:
             base_options=mp_tasks.BaseOptions(model_asset_path=_model_path("face_landmarker.task")),
             running_mode=vision.RunningMode.VIDEO,
             num_faces=3,   # passengers may be in view; DriverSelector picks the driver
+            # lower than the 0.5 defaults: keeps tracking a face that is turned far away
+            # from the camera (it was lost beyond ~45 degrees in live tests)
+            min_face_detection_confidence=0.3,
+            min_face_presence_confidence=0.3,
+            min_tracking_confidence=0.3,
             output_face_blendshapes=True,
             output_facial_transformation_matrixes=True,
         )
@@ -60,7 +65,9 @@ class HandProvider:
         options = vision.GestureRecognizerOptions(
             base_options=mp_tasks.BaseOptions(model_asset_path=_model_path("gesture_recognizer.task")),
             running_mode=vision.RunningMode.VIDEO,
-            num_hands=4,   # driver + passenger hands; gestures only use the driver's
+            # 2 hands: stable. num_hands=4 crashed MediaPipe's gesture graph with two people
+            # in view ("Packet isn't the sole owner of the holder").
+            num_hands=2,
         )
         self._recognizer = vision.GestureRecognizer.create_from_options(options)
 

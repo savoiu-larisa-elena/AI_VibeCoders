@@ -121,7 +121,7 @@ class Pipeline:
                 if every > 1 and self._frame_i % every and name in self._last_results:
                     result = self._last_results[name]
                 else:
-                    result = provider.process(mp_image, ts_ms)
+                    result = self._safe_process(name, mp_image, ts_ms)
                     self._last_results[name] = result
                 setattr(ctx, name, result)
                 timing[f"model_{name}"] = (time.perf_counter() - t) * 1000
@@ -157,6 +157,25 @@ class Pipeline:
         self._ctx = ctx
         return signals, events
 
+    def _safe_process(self, name: str, mp_image, ts_ms: int):
+        """Run one model. If MediaPipe crashes internally (it has rare bugs), rebuild that
+        model and carry on - one bad frame must never stop the whole camera loop."""
+        provider = self.providers[name]
+        try:
+            return provider.process(mp_image, ts_ms)
+        except Exception as e:  # noqa: BLE001
+            print(f"[PIPELINE] {name} model crashed ({str(e)[:120]}) -> restarting it", flush=True)
+            try:
+                provider.close()
+            except Exception:  # noqa: BLE001 - a crashed graph may fail to close too
+                pass
+            fresh = type(provider)()
+            if hasattr(provider, "driver") and hasattr(fresh, "driver"):
+                fresh.driver = provider.driver          # keep who the driver is
+            self.providers[name] = fresh
+            self.model_restarts = getattr(self, "model_restarts", 0) + 1
+            return self._last_results.get(name)       # reuse the last good result
+
     def draw(self, frame):
         for d in self.detectors:
             if d.name in self.outputs:
@@ -166,4 +185,7 @@ class Pipeline:
         for d in self.detectors:
             d.close()
         for p in self.providers.values():
-            p.close()
+            try:
+                p.close()
+            except Exception:  # noqa: BLE001 - never crash while shutting down
+                pass

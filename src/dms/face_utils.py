@@ -31,13 +31,13 @@ def face_box(landmarks, w: int, h: int) -> tuple[int, int, int, int]:
 
 def driver_zone(face_result, w: int, h: int, scale: float = 1.6):
     """Area that belongs to the DRIVER: their face box widened by `scale` face-widths on
-    each side, from just above the face down to the bottom (hands, lap, phone).
+    each side, from well above the head (raised hand) down to the bottom (hands, lap, phone).
     Objects and hands outside it belong to someone else (passenger). None = no driver."""
     if not face_result or not face_result.face_landmarks:
         return None
     x1, y1, x2, y2 = face_box(face_result.face_landmarks[0], w, h)
     fw, fh = x2 - x1, y2 - y1
-    return (max(0, int(x1 - scale * fw)), max(0, int(y1 - 0.5 * fh)),
+    return (max(0, int(x1 - scale * fw)), max(0, int(y1 - 1.5 * fh)),   # room for a raised hand
             min(w, int(x2 + scale * fw)), h)
 
 
