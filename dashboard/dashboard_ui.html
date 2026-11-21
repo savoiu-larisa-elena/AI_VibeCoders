@@ -52,9 +52,23 @@ function speak(text,priority){
   if(v)u.voice=v;u.lang='en-US';u.rate=priority==='critical'?1.08:1.0;
   setTimeout(()=>speechSynthesis.speak(u),priority==='info'?0:380);   // after the beep
 }
-function updateVoiceButton(){$('voice').textContent=voiceOn?'🔊 VOICE ON':'🔈 VOICE OFF';$('voice').classList.toggle('voiceon',voiceOn)}
-$('voice').onclick=()=>{voiceOn=!voiceOn;
-  updateVoiceButton();if(voiceOn){beep('warning');speak('Voice alerts on.','info')}else speechSynthesis.cancel()};
+// Two voices exist - only ONE may speak, otherwise every message is heard twice:
+//  * server voice (dms/voice.py: Groq Orpheus AI voice, offline fallback) - preferred.
+//    The VOICE button turns it on/off; the browser only adds the beep + red flash.
+//  * browser voice - used only when the server voice is unavailable (no --llm / no audio).
+let serverVoice={available:false,enabled:false};
+const voiceActive=()=>serverVoice.available?serverVoice.enabled:voiceOn;
+function updateVoiceButton(){
+  const on=voiceActive();
+  $('voice').textContent=(on?'🔊 VOICE ON':'🔈 VOICE OFF')+(serverVoice.available?' · AI':'');
+  $('voice').title=serverVoice.available?'AI voice on the laptop (Groq Orpheus, offline fallback)':'Browser voice (AI voice not running)';
+  $('voice').classList.toggle('voiceon',on)}
+$('voice').onclick=async()=>{
+  if(serverVoice.available){
+    try{const r=await fetch('/voice/'+(serverVoice.enabled?'off':'on'),{method:'POST'});serverVoice=(await r.json()).voice}catch(e){toast('Voice switch unavailable.')}
+    if(serverVoice.enabled)beep('warning');            // click also unlocks browser audio for beeps
+  }else{voiceOn=!voiceOn;if(voiceOn){beep('warning');speak('Voice alerts on.','info')}else speechSynthesis.cancel()}
+  updateVoiceButton()};
 updateVoiceButton();
 if('speechSynthesis' in window)speechSynthesis.onvoiceschanged=()=>{};
 function announce(r){
@@ -62,7 +76,9 @@ function announce(r){
   const first=lastSpokenTs===null;lastSpokenTs=r.ts;
   if(first)return;                                      // don't replay an old message on page load
   if(r.priority==='critical'){const p=$('crewPanel');p.classList.remove('flash');void p.offsetWidth;p.classList.add('flash')}
-  if(voiceOn){beep(r.priority);speak(r.speak,r.priority)}
+  if(!voiceActive())return;
+  beep(r.priority);
+  if(!serverVoice.available)speak(r.speak,r.priority);  // server voice speaks on its own
 }
 function perfNote(s){
   const t=s.timing||{};if(t.camera===undefined)return;
@@ -80,7 +96,7 @@ function renderAssistant(s){
   if(r){tags.push(`<span class="tag ${escapeHTML(r.priority)}">${escapeHTML(r.priority).toUpperCase()}</span>`,
     `<span class="tag">LEVEL ${escapeHTML(r.level)}</span>`,`<span class="tag">ACTION ${escapeHTML(r.action).toUpperCase()}</span>`,
     `<span class="tag">${r.source==='llm'?'LLM '+escapeHTML(r.latency)+'s':escapeHTML(r.source).toUpperCase()}</span>`)}
-  if(s.muted_seconds>0)tags.push(`<span class="tag muted">WARNINGS MUTED ${s.muted_seconds}s</span>`);
+  if(s.muted_seconds>0)tags.push(`<span class="tag muted">WARNINGS MUTED ${s.muted_seconds}s</span><button class="tag muted" style="cursor:pointer" onclick="unmute()">✕ UNMUTE</button>`);
   $('assistMeta').innerHTML=tags.join('');
   const log=(s.assistant_log||[]).slice(0,-1).slice(-4).reverse();
   $('assistLog').innerHTML=log.map(x=>`<div class="event"><b>${escapeHTML(x.speak)}</b><small>${new Date(x.ts*1000).toLocaleTimeString()} · ${escapeHTML(x.trigger)} · level ${escapeHTML(x.level)}</small></div>`).join('');
@@ -92,6 +108,7 @@ $('endSession').onclick=async()=>{try{await request('/end-session');await tick()
 $('startSession').onclick=async()=>{try{await request('/start-session');await tick();toast('New telemetry session started.')}catch(e){toast('Unable to start session.')}};
 $('recalibrate').onclick=async()=>{try{await request('/recalibrate');toast('Calibration requested.')}catch(e){toast('Recalibration unavailable.')}};
 $('refreshSessions').onclick=refreshArchive;
+async function unmute(){try{await request('/unmute');await tick();toast('Warnings unmuted.')}catch(e){toast('Unmute unavailable.')}}
 $('window').onchange=()=>renderTelemetry(hist);
 $('exportCsv').onclick=()=>{if(selectedSession)location.href='/sessions/'+selectedSession+'/csv'};
 for(const nav of document.querySelectorAll('.navlink'))nav.onclick=()=>{document.querySelectorAll('.navlink').forEach(n=>n.classList.remove('active'));nav.classList.add('active')};
@@ -103,6 +120,6 @@ function duration(seconds){if(!Number.isFinite(seconds))return '—';return Math
 async function refreshArchive(){try{const r=await fetch('/sessions',{cache:'no-store'});if(!r.ok)throw Error();const {sessions}=await r.json();$('archiveCount').textContent=sessions.length+' SAVED';$('archiveList').innerHTML=sessions.length?sessions.map(s=>`<button class="archiveItem ${selectedSession===s.session_id?'selected':''}" data-session="${s.session_id}"><strong>${new Date(s.started_at*1000).toLocaleString()}</strong><small>${duration((s.ended_at??s.started_at)-s.started_at)} · ${s.samples} samples · ${s.events} events</small></button>`).join(''):'<div class="archiveEmpty">No saved sessions yet. End a session to archive its telemetry.</div>';for(const btn of $('archiveList').querySelectorAll('[data-session]'))btn.onclick=()=>loadSession(btn.dataset.session);archiveRefreshAt=Date.now()}catch(e){$('archiveList').textContent='Could not load saved sessions.'}}
 async function loadSession(id){try{const r=await fetch('/sessions/'+id,{cache:'no-store'});if(!r.ok)throw Error();selectedData=await r.json();selectedSession=id;$('reviewTitle').textContent=new Date(selectedData.started_at*1000).toLocaleString();$('reviewDuration').textContent=duration(selectedData.ended_at-selectedData.started_at);$('reviewSamples').textContent=selectedData.history.length;$('reviewEvents').textContent=selectedData.session_events.length;$('exportCsv').disabled=false;drawChart('reviewChart','perclos','#d8b777',0,100,selectedData.history);for(const b of $('archiveList').querySelectorAll('[data-session]'))b.classList.toggle('selected',b.dataset.session===id)}catch(e){toast('Unable to open archived session.')}}
 async function tick(){try{const r=await fetch(`/state?since=${histSince()}&session_id=${encodeURIComponent(histSession)}`,{cache:'no-store'});if(!r.ok)throw Error();const s=await r.json();lastState=s;
-if(s.history_reset)hist=s.history;else hist.push(...s.history);if(hist.length>MAX_HIST)hist=hist.slice(-MAX_HIST);histSession=s.session_id;$('live').textContent=s.camera==='active'?'● CAMERA ONLINE':'● CAMERA '+String(s.camera).toUpperCase();$('camera').textContent=String(s.camera).toUpperCase();$('fps').textContent=Number(s.fps||0).toFixed(1);$('count').textContent=s.session_events.length;$('calibration').textContent=(s.calibrating?'CALIBRATING':'CALIBRATED')+' · driver '+(s.driver_present?'✓':'not visible')+' · '+s.passengers+' passenger'+(s.passengers===1?'':'s');perfNote(s);announce(s.assistant);const [cond,note]=condition(s);$('driver').textContent=cond;$('driverNote').textContent=note;$('warning').textContent=s.latest_warning;renderAssistant(s);$('signals').innerHTML=Object.entries(s.statuses).map(([k,v])=>`<div class="statusrow"><span>${escapeHTML(k.replaceAll('_',' ').toUpperCase())}</span><b>${escapeHTML(v)}</b></div>`).join('')||'<div class="hint">Waiting for detector output…</div>';$('events').innerHTML=s.events.slice(-7).reverse().map(e=>`<div class="event"><b>${escapeHTML(e.type)}</b> · ${escapeHTML(e.severity)}<small>${new Date(e.ts*1000).toLocaleTimeString()} · ${escapeHTML(e.source)}</small></div>`).join('')||'No events recorded.';const ended=s.session==='ended';$('endSession').disabled=ended;$('startSession').style.display=ended?'inline-block':'none';$('sessionBadge').textContent=ended?'■ SESSION SAVED':'● RECORDING';$('sessionInfo').textContent=(ended?'Session frozen':'Recording live')+' · '+s.history_total+' samples · source JSONL logging continues';renderTelemetry(hist)}catch(e){$('live').textContent='● DISCONNECTED'}}
+if(s.history_reset)hist=s.history;else hist.push(...s.history);if(hist.length>MAX_HIST)hist=hist.slice(-MAX_HIST);histSession=s.session_id;$('live').textContent=s.camera==='active'?'● CAMERA ONLINE':'● CAMERA '+String(s.camera).toUpperCase();$('camera').textContent=String(s.camera).toUpperCase();$('fps').textContent=Number(s.fps||0).toFixed(1);$('count').textContent=s.session_events.length;$('calibration').textContent=(s.calibrating?'CALIBRATING':'CALIBRATED')+' · driver '+(s.driver_present?'✓':'not visible')+' · '+s.passengers+' passenger'+(s.passengers===1?'':'s');perfNote(s);if(s.voice&&(s.voice.available!==serverVoice.available||s.voice.enabled!==serverVoice.enabled)){serverVoice=s.voice;updateVoiceButton()}announce(s.assistant);const [cond,note]=condition(s);$('driver').textContent=cond;$('driverNote').textContent=note;$('warning').textContent=s.latest_warning;renderAssistant(s);$('signals').innerHTML=Object.entries(s.statuses).map(([k,v])=>`<div class="statusrow"><span>${escapeHTML(k.replaceAll('_',' ').toUpperCase())}</span><b>${escapeHTML(v)}</b></div>`).join('')||'<div class="hint">Waiting for detector output…</div>';$('events').innerHTML=s.events.slice(-7).reverse().map(e=>`<div class="event"><b>${escapeHTML(e.type)}</b> · ${escapeHTML(e.severity)}<small>${new Date(e.ts*1000).toLocaleTimeString()} · ${escapeHTML(e.source)}</small></div>`).join('')||'No events recorded.';const ended=s.session==='ended';$('endSession').disabled=ended;$('startSession').style.display=ended?'inline-block':'none';$('sessionBadge').textContent=ended?'■ SESSION SAVED':'● RECORDING';$('sessionInfo').textContent=(ended?'Session frozen':'Recording live')+' · '+s.history_total+' samples · source JSONL logging continues';renderTelemetry(hist)}catch(e){$('live').textContent='● DISCONNECTED'}}
 setInterval(tick,850);window.addEventListener('resize',()=>{renderTelemetry(hist);if(selectedData)drawChart('reviewChart','perclos','#d8b777',0,100,selectedData.history)});tick();refreshArchive();
 </script></body></html>

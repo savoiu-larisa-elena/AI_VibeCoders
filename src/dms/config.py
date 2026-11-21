@@ -80,7 +80,10 @@ class GestureConfig:
         "Thumb_Up": 0.80, "Thumb_Down": 0.80, "Open_Palm": 0.55, "Victory": 0.70})
     vote_window: int = 10       # look at the last 10 frames...
     votes_needed: int = 6       # ...the same gesture must win at least 6 of them
-    hold_seconds: float = 0.6   # then be held this long to count
+    # ...then be held this long to count. Open palm (mute) is the riskiest to trigger by
+    # accident - hands open naturally - so it needs the longest hold.
+    hold_seconds: dict = field(default_factory=lambda: {
+        "Open_Palm": 1.8, "Thumb_Up": 1.0, "Thumb_Down": 1.0, "Victory": 1.0})
     # gestures that trigger something (fist is ignored: hands on the wheel look like fists)
     active: tuple = ("Thumb_Up", "Open_Palm", "Thumb_Down", "Victory")
 

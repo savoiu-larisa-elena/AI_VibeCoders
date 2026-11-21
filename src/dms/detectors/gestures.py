@@ -1,7 +1,9 @@
 """Hand gestures = the driver's way to talk back to the assistant without speaking.
 
-    Thumb_Up    "I'm OK / got it"       -> acknowledges the last alert, lowers escalation
-    Open_Palm   "quiet for a minute"    -> mutes WARNING messages for 60 s (critical still speak)
+    Thumb_Up    "I'm OK / got it"       -> acknowledges the last alert, lowers escalation;
+                                           while warnings are muted: UNMUTES them
+    Open_Palm   "quiet for a minute"    -> mutes WARNING messages for 60 s (critical still speak);
+                                           must be held 1.8 s so it isn't triggered by accident
     Thumb_Down  "I need a break"        -> assistant suggests a rest stop
     Victory     "how am I doing?"       -> assistant gives a short status report of the drive
     Closed_Fist  ignored on purpose: hands gripping the steering wheel look like fists
@@ -177,8 +179,8 @@ class GestureDetector(Detector):
             self._current, self._since, self._emitted = stable, ctx.ts, False
         held = ctx.ts - self._since if stable else 0.0
 
-        if (stable and stable in self.cfg.active and held >= self.cfg.hold_seconds
-                and not self._emitted):
+        if (stable and stable in self.cfg.active
+                and held >= self.cfg.hold_seconds.get(stable, 1.0) and not self._emitted):
             self._emitted = True
             out.events.append(Event("gesture", Severity.INFO, self.name,
                                     confidence=round(score, 2),

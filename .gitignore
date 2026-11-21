@@ -20,3 +20,7 @@ logs/*
 .idea/
 .DS_Store
 Thumbs.db
+
+# AI voice cache: the committed .wav files are the pre-generated fixed phrases;
+# anything new generated at runtime stays local
+voice_cache/*.wav

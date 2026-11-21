@@ -36,7 +36,8 @@
 | **Pit Wall dashboard** | FastAPI + HTML/JS | Live camera, attention, signals, LLM guidance, events, charts, session archive and CSV export. | ✅ Implemented |
 | **Event recorder** | Python + JSON Lines | Writes one structured JSON record per event and per assistant reply. | ✅ Implemented |
 | **Driver + passengers** | Face position tracking | Driver = the face at the calibrated seat position (green box); every other face is a passenger (blue box). The copilot can ask a passenger to help when the driver is very tired. | ✅ Implemented |
-| **Voice + sound alerts** | Browser speech synthesis + Web Audio | Speaks each copilot message; beep before warnings, double tone + red flash for critical. Offline, no API tokens. Click **VOICE** on the dashboard to enable. | ✅ Implemented |
+| **AI voice** | Groq TTS (Orpheus, voice "troy") + pygame playback; offline fallback `pyttsx3` | Speaks each copilot message on the laptop; critical alerts interrupt. The fixed sentences (fallbacks, gesture replies) are pre-generated into `voice_cache/`, so the natural voice also works without the LLM. | ✅ Implemented |
+| **Sound + visual alerts** | Web Audio + CSS | Beep before warnings, double tone + red panel flash for critical. The dashboard **VOICE** button turns the voice on/off (browser speech is used only if the AI voice isn't running). | ✅ Implemented |
 
 **Scope note:** These detections are heuristic indicators, **not** validated measurements of impairment or proof of unsafe driving. The phone detector recognizes a visible phone; it does not conclusively prove active use.
 
@@ -116,7 +117,7 @@ python tools/test_llm.py    # sends a few test situations, no camera needed
 python dashboard/dashboard.py --detectors drowsiness,head_pose,phone,gestures --llm
 ```
 
-Open **http://127.0.0.1:8000** and click **🔈 VOICE OFF** once to turn the spoken alerts on (browsers only allow sound after a click). Leave out `--llm` to run without the LLM (no API usage; pre-written guidance is shown instead).
+Open **http://127.0.0.1:8000**. With `--llm` the AI voice speaks on the laptop (button shows **VOICE ON · AI**; click it to mute). Click the page once so the browser may play the alert beeps. Leave out `--llm` to run without the LLM (no API usage; pre-written guidance is shown instead).
 
 Under **Processing speed** the dashboard shows where each frame's time goes (`camera · AI · video` in ms). If the camera part is the largest, the webcam itself is slow — usually not enough light.
 
@@ -146,7 +147,7 @@ python run.py --camera 1                # try another camera index
 | **Drowsiness** | Eye aspect ratio against calibrated baseline; PERCLOS; mouth aspect ratio | Eyes closed **≥ 1.0 s**, PERCLOS **≥ 25% in a 60 s window**, or mouth open **≥ 1.2 s** |
 | **Head pose** | Yaw / pitch relative to the calibrated forward pose; gaze-down cues | Looking away **≥ 2 s** (down = critical) |
 | **Phone / drink** | YOLO11s detections inside an approximate driver zone, with temporal voting | Phone: **3 of 5** recent YOLO passes; drink: **2 of 5** (often half-hidden by the hand); sustained **≥ 1 s** |
-| **Gestures** | Gesture model + landmark geometry check, majority vote | Same gesture in **6 of 10** frames, held **≥ 0.6 s** |
+| **Gestures** | Gesture model + landmark geometry check, majority vote | Same gesture in **6 of 10** frames, then held **1.8 s** (open palm) or **1.0 s** (others) |
 
 Thresholds are **demo configuration**, not automotive-certified safety limits. Adjust them in [`src/dms/config.py`](src/dms/config.py). A **5-second event cooldown** prevents repetitive notifications. **Driver vs. passenger:** the driver is the face in the middle of the image at calibration; after that the system follows that seat position and ignores faces elsewhere (a passenger leaning in is not taken as the driver). Press **RECALIBRATE** to lock onto a new driver. This is a position heuristic, not identity recognition. Calibration only counts time while a face is visible. Head-down posture suppresses misleading eye-closure interpretation.
 
@@ -154,8 +155,8 @@ Thresholds are **demo configuration**, not automotive-certified safety limits. A
 
 | Gesture | Meaning | What happens |
 |---|---|---|
-| 👍 Thumbs up | "I'm OK / got it" | Acknowledges the last alert, lowers the escalation level, short thank-you |
-| ✋ Open palm | "Quiet for a minute" | Instantly mutes **warnings** for 60 s (critical alerts still come through) |
+| 👍 Thumbs up | "I'm OK / got it" | Acknowledges the last alert, lowers the escalation level, short thank-you. **While warnings are muted: unmutes them.** |
+| ✋ Open palm | "Quiet for a minute" | Mutes **warnings** for 60 s (critical alerts still come through). Must be held **1.8 s**. Unmute early with 👍 or the dashboard's **UNMUTE** button. |
 | 👎 Thumbs down | "I need a break" | The copilot suggests stopping at the next safe place |
 | ✌️ Victory | "How am I doing?" | The copilot gives a short status report of the drive |
 | ✊ Fist | — | Ignored on purpose: hands gripping the wheel look like fists |
@@ -214,7 +215,9 @@ AI_VibeCoders/
 │   ├── events.py              # Event model, severity and cooldown
 │   ├── providers.py           # Shared MediaPipe providers
 │   ├── face_utils.py          # Facial geometry utilities
-│   ├── pipeline.py            # Detector orchestration
+│   ├── pipeline.py            # Detector orchestration + timing
+│   ├── perf.py                # Windows anti-throttling + FPS counter
+│   ├── voice.py               # AI voice: Groq TTS, cache, offline fallback
 │   ├── detectors/
 │   │   ├── base.py            # Detector interfaces
 │   │   ├── drowsiness.py      # Eye / mouth / fatigue signals
@@ -226,6 +229,7 @@ AI_VibeCoders/
 │       ├── llm.py             # LLM client (Groq / Gemini / Ollama)
 │       ├── context.py         # Driver summary + attention score
 │       └── agent.py           # When to call, escalation, prompt, fallback
+├── voice_cache/               # Pre-generated audio for fixed phrases
 ├── models/                    # Downloaded weights (not committed)
 ├── logs/                      # Session JSONL + dashboard sessions (not committed)
 └── presentation/              # Hackathon slides
@@ -242,7 +246,7 @@ AI_VibeCoders/
 | No events appear | A detection must satisfy its duration/threshold rules; ordinary frames produce no events. |
 | Dashboard says "LLM off" | Start with `--llm` and check `GROQ_API_KEY` in `.env` (`python tools/test_llm.py`). |
 | Low FPS | Check the `camera · AI · video` numbers under Processing speed. Large *camera* time = webcam slowed down by low light (add a lamp facing you). Close other heavy apps. |
-| No voice | Click the VOICE button once after opening the page; check the laptop volume. Voice works in the dashboard only (not in `run.py`). |
+| No voice | Check the terminal for `[VOICE]` lines (key loaded, TTS errors), the laptop volume and the VOICE button. If Groq TTS fails, the offline `pyttsx3` voice is used. |
 | Guidance marked FALLBACK | The LLM timed out or the rate limit was reached; pre-written messages are used until it recovers. |
 
 ## 🛡️ Safety, privacy and limitations

@@ -22,6 +22,8 @@ sys.path.insert(0, str(ROOT / 'src'))
 from dms.config import Config,LOGS_DIR
 from dms.pipeline import Pipeline
 from dms.agent import Agent, DriverContext, LLMClient
+from dms.agent.agent import FALLBACKS
+from dms.perf import FpsCounter, boost_process
 
 app=FastAPI(title='VibeCoders Driver Telemetry')
 lock=threading.Lock()
@@ -33,7 +35,9 @@ state={'camera':'starting','calibrating':True,'fps':0,'signals':{},'statuses':{}
        'attention':100,'llm':{'enabled':False,'provider':None,'model':None},
        'assistant':None,'assistant_log':[],'muted_seconds':0,
        # occupants + performance diagnostics
-       'driver_present':False,'passengers':0,'timing':{},'frame_id':0}
+       'driver_present':False,'passengers':0,'timing':{},'frame_id':0,
+       # AI voice (spoken on the laptop by dms.voice.Speaker); toggled from the dashboard
+       'voice':{'available':False,'enabled':True}}
 STREAM_WIDTH=960        # browser video is downscaled: cheaper to encode, send and decode
 STREAM_QUALITY=70
 # Archived dashboard sessions are independent of the continuous JSONL detector logs.
@@ -155,6 +159,25 @@ def trigger_recalibrate():
     recalibrate.set()
     return {'ok':True}
 
+AGENT={'agent':None}   # set by camera_worker when the LLM assistant runs
+
+@app.post('/unmute')
+def unmute():
+    """End the open-palm warning mute early (same as a thumbs up while muted)."""
+    agent=AGENT['agent']
+    done=bool(agent and agent.unmute())
+    if done:
+        with lock:
+            state['muted_seconds']=0
+    return {'ok':True,'unmuted':done}
+
+@app.post('/voice/{mode}')
+def set_voice(mode: str):
+    """Dashboard VOICE button: turn the spoken AI messages on/off."""
+    with lock:
+        state['voice']['enabled']=(mode=='on')
+        return {'ok':True,'voice':state['voice']}
+
 @app.get('/video')
 def video():
     def frames():
@@ -197,9 +220,8 @@ def camera_worker(args):
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT,config.camera.height)
     LOGS_DIR.mkdir(parents=True,exist_ok=True)
     path=LOGS_DIR/f'session_{datetime.now():%Y%m%d_%H%M%S_%f}.jsonl'
-    last=time.monotonic()
     last_sample=0.0
-    fps=0.0
+    fps_counter=FpsCounter()
     log=None
     timing={}   # smoothed ms per part of the frame, shown on the dashboard
 
@@ -219,14 +241,13 @@ def camera_worker(args):
         PRIO={'info':1,'warning':2,'critical':3}
         speaker=None
         try:
-            from dms.voice import Speaker
-            speaker=Speaker(voice='troy')
-            speaker.prewarm(['Please keep your eyes on the road.',
-                             'Please put the phone down.',
-                             'You seem drowsy. Consider taking a break.',
-                             'Please return your attention to the road.',
-                             'You may be getting tired.',
-                             'Are you okay? Please respond.'])
+            from dms.voice import Speaker, fixed_phrases
+            speaker=Speaker()   # voice from TTS_VOICE in .env (default: troy)
+            # pre-generate audio for every sentence the app can say WITHOUT the LLM
+            # (fallbacks + instant gesture replies) -> the voice still works offline
+            speaker.prewarm(fixed_phrases(FALLBACKS))
+            with lock:
+                state['voice']['available']=True
         except Exception as exc:   # voice must never break the dashboard
             print(f'[VOICE] disabled: {exc}',flush=True)
         def on_reply(r):   # called from the agent's background thread
@@ -238,11 +259,13 @@ def camera_worker(args):
                 state['assistant']=item
                 state['assistant_log']=(state['assistant_log']+[item])[-20:]
                 state['latest_warning']=r.speak
-            if speaker:
+                voice_on=state['voice']['enabled']
+            if speaker and voice_on:
                 speaker.say(r.speak,PRIO.get(r.priority,1))
         try:
             llm=LLMClient()
             agent=Agent(context,on_reply,llm)
+            AGENT['agent']=agent
             with lock:
                 state['llm']={'enabled':True,'provider':llm.provider,'model':llm.model}
         except Exception as exc:   # missing key etc. -> keep running without LLM
@@ -281,9 +304,7 @@ def camera_worker(args):
                 if phone:
                     timing['objects_bg']=phone.last_run_ms
                 now=time.monotonic()
-                inst=1/max(now-last,1e-5)
-                fps=inst if fps==0 else 0.9*fps+0.1*inst   # smoothed; starts at the real value
-                last=now
+                fps=fps_counter.tick()   # real frames in the last second
                 for event in events:
                     write_log(event.to_json())
                 if not signals.get('calibrating'):
@@ -345,8 +366,11 @@ if __name__=='__main__':
     parser.add_argument('--port',type=int,default=8000)
     parser.add_argument('--llm',action='store_true',help='enable the LLM assistant (key in .env; uses API quota)')
     args=parser.parse_args()
-    threading.Thread(target=camera_worker,args=(args,),daemon=True).start()
+    print('Performance:',boost_process())   # stop Windows from moving us to slow cores
+    worker=threading.Thread(target=camera_worker,args=(args,),daemon=True)
+    worker.start()
     try:
         uvicorn.run(app,host='127.0.0.1',port=args.port,log_level='info')
     finally:
         stop.set()
+        worker.join(timeout=3)   # let the camera loop finish cleanly (no error spam on Ctrl+C)

@@ -30,8 +30,8 @@ sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 from dms.config import LOGS_DIR, Config  # noqa: E402
 from dms.events import Severity  # noqa: E402
+from dms.perf import FpsCounter, boost_process  # noqa: E402
 from dms.pipeline import Pipeline  # noqa: E402
-from dms.voice import Speaker  # noqa: E402
 
 COLORS = {Severity.INFO: (255, 255, 0), Severity.WARNING: (0, 165, 255),
           Severity.CRITICAL: (0, 0, 255)}
@@ -72,6 +72,7 @@ def main():
     config = Config()
     if args.camera is not None:
         config.camera.index = args.camera
+    print("Performance:", boost_process())   # stop Windows from moving us to slow cores
 
     pipeline = Pipeline([n.strip() for n in args.detectors.split(",") if n.strip()], config)
     cap = open_camera(config.camera)
@@ -91,6 +92,7 @@ def main():
     latest_reply = {"reply": None, "shown_at": 0.0}
     if args.llm:
         from dms.agent import Agent, DriverContext, LLMClient
+        from dms.agent.agent import FALLBACKS
 
         def on_reply(r):   # runs in the agent's background thread
             tag = {"llm": f"LLM {r.latency:.2f}s", "rule": "instant rule"}.get(
@@ -103,13 +105,12 @@ def main():
                 speaker.say(r.speak, PRIO.get(r.priority, 1))
 
         llm = LLMClient()
-        speaker = Speaker(voice="troy")
-        speaker.prewarm(['Please keep your eyes on the road.',
-                         'Please put the phone down.',
-                         'You seem drowsy. Consider taking a break.',
-                         'Please return your attention to the road.',
-                         'You may be getting tired.',
-                         'Are you okay? Please respond.'])
+        try:   # voice is optional: a missing audio device / package must not stop the app
+            from dms.voice import Speaker, fixed_phrases
+            speaker = Speaker()   # voice from TTS_VOICE in .env (default: troy)
+            speaker.prewarm(fixed_phrases(FALLBACKS))
+        except Exception as exc:  # noqa: BLE001
+            print(f"[VOICE] disabled: {exc}")
         context = DriverContext()
         agent = Agent(context, on_reply, llm)
         print(f"LLM assistant ON: provider={llm.provider} model={llm.model}")
@@ -118,7 +119,7 @@ def main():
           "- look at the road with eyes open...")
 
     recent: list[tuple[float, str, Severity]] = []
-    fps, last = 0.0, time.monotonic()
+    fps_counter = FpsCounter()
     try:
         while True:
             ok, frame = cap.read()
@@ -140,8 +141,7 @@ def main():
             # ---- debug overlay ----
             pipeline.draw(frame)
             now = time.monotonic()
-            inst = 1 / max(now - last, 1e-6); last = now
-            fps = inst if fps == 0 else 0.9 * fps + 0.1 * inst
+            fps = fps_counter.tick()   # real frames in the last second
             put(frame, f"FPS {fps:.0f}" + (f"   |   attention {context.attention:.0f}/100"
                                            if context else ""), 25)
             if signals["calibrating"]:

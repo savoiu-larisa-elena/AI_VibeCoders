@@ -151,12 +151,24 @@ class Agent:
                                 "none", f"Warnings muted {self.SNOOZE_SECONDS}s by driver",
                                 "gesture", 1, "rule"))
             return
+        if g == "Thumb_Up" and now < self.snoozed_until:
+            self.unmute()               # thumbs up while muted = "warnings back on"
+            return
         meaning = self.GESTURE_MEANING.get(g)
         if not meaning:
             return
         if meaning == "acknowledge":
             self.acknowledge()
         self._submit(ev, level=1, now=now, meaning=meaning)
+
+    def unmute(self) -> bool:
+        """End the open-palm mute early (thumbs up, or the dashboard's UNMUTE button)."""
+        if time.time() >= self.snoozed_until:
+            return False
+        self.snoozed_until = 0.0
+        self.on_reply(Reply("Okay, warnings are back on.", "info", "none",
+                            "Warnings unmuted by driver", "gesture", 1, "rule"))
+        return True
 
     def _submit(self, ev: Event, level: int, now: float, meaning: str | None = None) -> None:
         payload = self.context.summary(ev)
