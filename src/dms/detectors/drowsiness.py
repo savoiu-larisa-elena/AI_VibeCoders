@@ -49,9 +49,14 @@ class DrowsinessDetector(Detector):
         self.pitch = PitchBaseline(sign=config.head_pose.pitch_sign)
         self.recalibrate()
 
-    def recalibrate(self):
-        self.pitch.reset()
+    def recalibrate(self, soft: bool = False):
+        """Full: forget everything (new driver). Soft: learn a fresh open-eye baseline but
+        keep the old one until then, and keep PERCLOS/blink history (fatigue trend)."""
+        self.pitch.reset(soft)
         self._calib_ears: list[float] = []
+        self._needs_baseline = True
+        if soft:
+            return
         self.baseline_ear: float | None = None
         self._closed_since: float | None = None
         self._yawn_since: float | None = None
@@ -77,8 +82,9 @@ class DrowsinessDetector(Detector):
         # --- calibration: learn this driver's normal open-eye EAR ---
         if ctx.calibrating:
             self._calib_ears.append(ear)
-        elif self.baseline_ear is None and self._calib_ears:
+        elif self._needs_baseline and self._calib_ears:
             self.baseline_ear = float(np.median(self._calib_ears))
+            self._needs_baseline, self._calib_ears = False, []
 
         threshold = (self.baseline_ear * self.cfg.ear_closed_ratio
                      if self.baseline_ear else self.cfg.ear_fallback_threshold)

@@ -29,6 +29,22 @@ def face_box(landmarks, w: int, h: int) -> tuple[int, int, int, int]:
     return int(min(xs) * w), int(min(ys) * h), int(max(xs) * w), int(max(ys) * h)
 
 
+def driver_zone(face_result, w: int, h: int, scale: float = 1.6):
+    """Area that belongs to the DRIVER: their face box widened by `scale` face-widths on
+    each side, from just above the face down to the bottom (hands, lap, phone).
+    Objects and hands outside it belong to someone else (passenger). None = no driver."""
+    if not face_result or not face_result.face_landmarks:
+        return None
+    x1, y1, x2, y2 = face_box(face_result.face_landmarks[0], w, h)
+    fw, fh = x2 - x1, y2 - y1
+    return (max(0, int(x1 - scale * fw)), max(0, int(y1 - 0.5 * fh)),
+            min(w, int(x2 + scale * fw)), h)
+
+
+def in_box(x: float, y: float, box) -> bool:
+    return box[0] <= x <= box[2] and box[1] <= y <= box[3]
+
+
 def _reorder(face_result, order: list[int]) -> None:
     """Keep only the faces in `order` (in that order), across all result lists."""
     face_result.face_landmarks = [face_result.face_landmarks[i] for i in order]
@@ -43,7 +59,7 @@ class DriverSelector:
     """Decides which face is the DRIVER when several people are in view.
 
     In a car the driver sits in a fixed place in the camera image. So:
-      * first lock-on: the most CENTRAL, reasonably large face (the person in front of the camera)
+      * first lock-on: the large face closest to the driver's seat (seat_x; left by default)
       * after that: always follow the face closest to the driver's remembered position
       * if no face is near that position (driver turned away, passenger leaning in),
         report "no driver face" instead of switching to the passenger
@@ -57,10 +73,14 @@ class DriverSelector:
     """
 
     def __init__(self, max_jump: float = 1.2, lost_reset_s: float = 10.0,
-                 relock_center: float = 0.25):
+                 relock_center: float = 0.25, seat_x: float = 0.5):
         self.max_jump = max_jump          # in face-widths from the remembered position
         self.lost_reset_s = lost_reset_s
-        self.relock_center = relock_center  # auto re-lock only if |face x - middle| < this
+        self.relock_center = relock_center  # auto re-lock only if |face x - seat_x| < this
+        # where the driver's seat is horizontally in the (mirrored) image: 0 = left edge,
+        # 0.5 = middle. With the camera on the roof between the seats, the driver is on
+        # the left and the passenger on the right (config.camera.driver_seat_x).
+        self.seat_x = seat_x
         self.reset()
 
     def reset(self):
@@ -91,16 +111,16 @@ class DriverSelector:
         candidates = list(range(len(geoms)))
         if self.anchor and now - self.last_seen > self.lost_reset_s:
             # driver gone for a long time: re-lock, but only onto a face in the middle
-            candidates = [i for i in candidates if abs(geoms[i][0] - 0.5) < self.relock_center]
+            candidates = [i for i in candidates if abs(geoms[i][0] - self.seat_x) < self.relock_center]
             if not candidates:
                 return None
             self.anchor = None
 
         if self.anchor is None:
-            # person in front of the camera: big AND near the horizontal centre
+            # the person in the driver's seat: big AND close to the driver's seat position
             def score(g):
                 cx, _, w, h = g
-                return (w * h) * max(0.05, 1.0 - abs(cx - 0.5) * 1.6)
+                return (w * h) * max(0.05, 1.0 - abs(cx - self.seat_x) * 1.6)
             idx = max(candidates, key=lambda i: score(geoms[i]))
         else:
             ax, ay, aw = self.anchor
@@ -127,9 +147,12 @@ class PitchBaseline:
         self.sign = sign
         self.reset()
 
-    def reset(self):
+    def reset(self, soft: bool = False):
+        """soft=True keeps using the old baseline until the new one is learned."""
         self._samples: list[float] = []
-        self.baseline: float | None = None
+        self._needs_baseline = True
+        if not soft:
+            self.baseline: float | None = None
 
     def relative(self, face_result, calibrating: bool) -> float | None:
         if not face_result or not face_result.facial_transformation_matrixes:
@@ -137,6 +160,7 @@ class PitchBaseline:
         pitch = matrix_to_euler(face_result.facial_transformation_matrixes[0])[0]
         if calibrating:
             self._samples.append(pitch)
-        elif self.baseline is None and self._samples:
+        elif self._needs_baseline and self._samples:
             self.baseline = float(np.median(self._samples))
+            self._needs_baseline, self._samples = False, []
         return (pitch - (self.baseline or 0.0)) * self.sign

@@ -60,7 +60,7 @@ class HandProvider:
         options = vision.GestureRecognizerOptions(
             base_options=mp_tasks.BaseOptions(model_asset_path=_model_path("gesture_recognizer.task")),
             running_mode=vision.RunningMode.VIDEO,
-            num_hands=2,
+            num_hands=4,   # driver + passenger hands; gestures only use the driver's
         )
         self._recognizer = vision.GestureRecognizer.create_from_options(options)
 

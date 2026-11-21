@@ -63,8 +63,9 @@ def put(frame, text, y, color=(255, 255, 255), scale=0.6):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--detectors", default="drowsiness,head_pose",
-                    help="comma-separated: drowsiness,head_pose,phone,gestures")
+    ap.add_argument("--detectors", default="drowsiness,head_pose,phone,gestures",
+                    help="comma-separated: drowsiness,head_pose,phone,gestures (wheel is always added)")
+    ap.add_argument("--no-wheel", action="store_true", help="hide the virtual steering wheel check")
     ap.add_argument("--camera", type=int, default=None)
     ap.add_argument("--llm", action="store_true", help="enable the LLM assistant (key in .env)")
     args = ap.parse_args()
@@ -72,6 +73,8 @@ def main():
     config = Config()
     if args.camera is not None:
         config.camera.index = args.camera
+    if args.no_wheel:
+        config.wheel.always_on = False
     print("Performance:", boost_process())   # stop Windows from moving us to slow cores
 
     pipeline = Pipeline([n.strip() for n in args.detectors.split(",") if n.strip()], config)

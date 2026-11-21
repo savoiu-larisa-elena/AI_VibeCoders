@@ -201,6 +201,8 @@ def camera_worker(args):
     config=Config()
     if args.camera is not None:
         config.camera.index=args.camera
+    if getattr(args,'no_wheel',False):
+        config.wheel.always_on=False
     try:
         pipeline=Pipeline([x.strip() for x in args.detectors.split(',') if x.strip()],config)
     except Exception as exc:
@@ -361,7 +363,8 @@ def camera_worker(args):
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser()
-    parser.add_argument('--detectors',default='drowsiness,head_pose')
+    parser.add_argument('--detectors',default='drowsiness,head_pose,phone,gestures')
+    parser.add_argument('--no-wheel',action='store_true',help='hide the virtual steering wheel check')
     parser.add_argument('--camera',type=int,default=None)
     parser.add_argument('--port',type=int,default=8000)
     parser.add_argument('--llm',action='store_true',help='enable the LLM assistant (key in .env; uses API quota)')

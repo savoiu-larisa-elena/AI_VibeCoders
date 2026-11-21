@@ -72,10 +72,13 @@ class DriverContext:
                 "phone_in_hand": p.get("phone_visible", False),
                 "drinking": p.get("drink_visible", False),
                 "passengers": self.signals.get("occupants", {}).get("passengers", 0),
+                # None = wheel check not running; 0 = no hand on the wheel
+                "hands_on_wheel": self.signals.get("wheel", {}).get("hands_on_wheel"),
             },
             "counts_last_5min": {
                 t: self.count(t, 300)
-                for t in ("eyes_closed", "yawn", "distraction", "phone", "fatigue_perclos")
+                for t in ("eyes_closed", "yawn", "distraction", "phone", "fatigue_perclos",
+                          "hands_off_wheel")
                 if self.count(t, 300)
             },
             "counts_session": dict(self.totals),

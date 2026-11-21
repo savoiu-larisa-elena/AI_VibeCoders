@@ -27,7 +27,7 @@ Rules:
 - Address the TRIGGER first. Mention other context only if it is the same kind of problem
   (e.g. repeated yawns + eyes closing = fatigue pattern).
 - Pick the action that fits the trigger:
-    phone -> put_phone_away;  distraction -> eyes_on_road;
+    phone -> put_phone_away;  distraction -> eyes_on_road;  hands_off_wheel -> hands_on_wheel;
     yawn / fatigue_perclos -> suggest_break;  eyes_closed -> eyes_on_road (level 1-2) or pull_over (level 3-4).
   Only use pull_over for fatigue at level 3-4.
 - If "passengers" > 0 and the trigger is fatigue at escalation_level 3-4, you may also ask
@@ -45,10 +45,11 @@ Rules:
 Reply ONLY with JSON:
 {"speak": "<message>",
  "priority": "info" | "warning" | "critical",
- "action": "none" | "eyes_on_road" | "put_phone_away" | "suggest_break" | "pull_over" | "check_in",
+ "action": "none" | "eyes_on_road" | "put_phone_away" | "hands_on_wheel" | "suggest_break" | "pull_over" | "check_in",
  "dashboard_note": "<max 12 words, technical summary for the dashboard>"}"""
 
-ACTIONS = {"none", "eyes_on_road", "put_phone_away", "suggest_break", "pull_over", "check_in"}
+ACTIONS = {"none", "eyes_on_road", "put_phone_away", "hands_on_wheel", "suggest_break",
+           "pull_over", "check_in"}
 
 # used when the LLM is slow / offline / returns garbage
 FALLBACKS = {
@@ -57,6 +58,7 @@ FALLBACKS = {
     "yawn": ("You seem tired. Consider a short break.", "warning", "suggest_break"),
     "distraction": ("Eyes on the road, please.", "warning", "eyes_on_road"),
     "phone": ("Please put the phone away while driving.", "critical", "put_phone_away"),
+    "hands_off_wheel": ("Please put your hands back on the steering wheel.", "warning", "hands_on_wheel"),
     "acknowledge": ("Got it, thanks.", "info", "none"),
     "need_break": ("Understood. Let's stop at the next safe place for a break.", "info", "suggest_break"),
     "status_report": ("Status report is unavailable right now. Keep up the focus.", "info", "none"),
@@ -105,7 +107,8 @@ class Agent:
     # Alerts only escalate within the same category: a yawn followed by a phone
     # is two different problems, not one getting worse.
     CATEGORY = {"eyes_closed": "fatigue", "yawn": "fatigue", "fatigue_perclos": "fatigue",
-                "distraction": "distraction", "phone": "distraction"}
+                "distraction": "distraction", "phone": "distraction",
+                "hands_off_wheel": "distraction"}
     MAX_LEVEL = {"fatigue": 4, "distraction": 3}   # only fatigue escalates to "pull over"
 
     def _level(self, ev: Event) -> int:

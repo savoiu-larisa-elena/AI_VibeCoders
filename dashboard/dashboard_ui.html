@@ -514,18 +514,39 @@ function speak(text,priority){
   u.rate=priority==='critical'?1.08:1.0;
   setTimeout(()=>speechSynthesis.speak(u),priority==='info'?0:380);
 }
+// Two voices exist - only ONE may speak, otherwise every message is heard twice:
+//  * server voice (src/dms/voice.py: Groq Orpheus AI voice on the laptop) - preferred.
+//    The VOICE button turns it on/off; the browser only adds the beep + red flash.
+//  * browser voice - used only when the server voice is unavailable (no --llm / no audio).
+let serverVoice={available:false,enabled:false};
+const voiceActive=()=>serverVoice.available?serverVoice.enabled:voiceOn;
 function updateVoiceButton(){
-  $('voice').textContent=voiceOn?'🔊 VOICE ON':'🔈 VOICE OFF';
-  $('voice').classList.toggle('voiceon',voiceOn);
+  const on=voiceActive();
+  $('voice').textContent=(on?'🔊 VOICE ON':'🔈 VOICE OFF')+(serverVoice.available?' · AI':'');
+  $('voice').title=serverVoice.available?'AI voice on the laptop (Groq Orpheus, offline fallback)':'Browser voice (AI voice not running)';
+  $('voice').classList.toggle('voiceon',on);
 }
-$('voice').onclick=()=>{
-  voiceOn=!voiceOn;
+$('voice').onclick=async()=>{
+  if(serverVoice.available){
+    try{
+      const r=await fetch('/voice/'+(serverVoice.enabled?'off':'on'),{method:'POST'});
+      serverVoice=(await r.json()).voice;
+    }catch(e){toast('Voice switch unavailable.')}
+    if(serverVoice.enabled)beep('warning');            // the click also unlocks browser audio for beeps
+  }else{
+    voiceOn=!voiceOn;
+    if(voiceOn){beep('warning');speak('Voice alerts on.','info')}
+    else if('speechSynthesis' in window)speechSynthesis.cancel();
+  }
   updateVoiceButton();
-  if(voiceOn){beep('warning');speak('Voice alerts on.','info')}
-  else if('speechSynthesis' in window)speechSynthesis.cancel();
 };
 updateVoiceButton();
 if('speechSynthesis' in window)speechSynthesis.onvoiceschanged=()=>{};
+function syncVoice(s){
+  if(s.voice&&(s.voice.available!==serverVoice.available||s.voice.enabled!==serverVoice.enabled)){
+    serverVoice=s.voice;updateVoiceButton();
+  }
+}
 
 function announce(r){
   if(!r||r.ts===lastSpokenTs)return;
@@ -536,7 +557,9 @@ function announce(r){
     const p=$('crewPanel');
     p.classList.remove('flash');void p.offsetWidth;p.classList.add('flash');
   }
-  if(voiceOn){beep(r.priority);speak(r.speak,r.priority)}
+  if(!voiceActive())return;
+  beep(r.priority);
+  if(!serverVoice.available)speak(r.speak,r.priority);  // the server voice speaks on its own
 }
 
 function perfNote(s){
@@ -561,7 +584,7 @@ function renderAssistant(s){
       `<span class="tag">${r.source==='llm'?'LLM '+escapeHTML(r.latency)+'s':escapeHTML(r.source).toUpperCase()}</span>`
     );
   }
-  if(s.muted_seconds>0)tags.push(`<span class="tag muted">WARNINGS MUTED ${s.muted_seconds}s</span>`);
+  if(s.muted_seconds>0)tags.push(`<span class="tag muted">WARNINGS MUTED ${s.muted_seconds}s</span><button class="tag muted" style="cursor:pointer" onclick="unmute()">✕ UNMUTE</button>`);
   $('assistMeta').innerHTML=tags.join('');
   const log=(s.assistant_log||[]).slice(0,-1).slice(-4).reverse();
   $('assistLog').innerHTML=log.map(x=>`<div class="event"><b>${escapeHTML(x.speak)}</b><small>${new Date(x.ts*1000).toLocaleTimeString()} · ${escapeHTML(x.trigger)} · level ${escapeHTML(x.level)}</small></div>`).join('');
@@ -601,6 +624,10 @@ $('recalibrate').onclick=async()=>{
   catch(e){toast('Recalibration unavailable.')}
 };
 $('refreshSessions').onclick=refreshArchive;
+async function unmute(){
+  try{await request('/unmute');await tick();toast('Warnings unmuted.')}
+  catch(e){toast('Unmute unavailable.')}
+}
 $('window').onchange=()=>renderTelemetry(hist);
 $('exportCsv').onclick=()=>{if(selectedSession)location.href='/sessions/'+selectedSession+'/csv'};
 
@@ -770,9 +797,10 @@ async function tick(){
     $('camera').textContent=String(s.camera).toUpperCase();
     $('fps').textContent=Number(s.fps||0).toFixed(1);
     $('count').textContent=s.session_events.length;
-    $('calibration').textContent=(s.calibrating?'CALIBRATING':'CALIBRATED')+' · driver '+(s.driver_present?'✓':'not visible')+' · '+s.passengers+' passenger'+(s.passengers===1?'':'s');
+    $('calibration').textContent=(s.calibrating?'CALIBRATING':(s.signals&&s.signals.refreshing_baseline?'REFRESHING BASELINE':'CALIBRATED'))+' · driver '+(s.driver_present?'✓':'not visible')+' · '+s.passengers+' passenger'+(s.passengers===1?'':'s');
 
     perfNote(s);
+    syncVoice(s);
     announce(s.assistant);
 
     const [cond,note,tone]=condition(s);

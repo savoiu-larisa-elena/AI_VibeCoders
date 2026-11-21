@@ -35,6 +35,8 @@
 | **AI copilot responses** | Groq LLM (`openai/gpt-oss-20b`), OpenAI-compatible client | Turns events into short, contextual guidance with escalation levels; local fallback if the API fails. | ✅ Implemented |
 | **Pit Wall dashboard** | FastAPI + HTML/JS | Live camera, attention, signals, LLM guidance, events, charts, session archive and CSV export. | ✅ Implemented |
 | **Event recorder** | Python + JSON Lines | Writes one structured JSON record per event and per assistant reply. | ✅ Implemented |
+| **Hands on the wheel** | MediaPipe hand landmarks + virtual steering wheel | A laptop camera can't see a real wheel, so the upper half of a see-through wheel is drawn in the lower-left corner, in front of the driver (camera on the roof between the seats: driver left, passenger right). At least one hand on it = OK; no hand for 2 s = warning, 5 s = critical. Starts checking once the hands were on the wheel. On by default (`--no-wheel` hides it). | ✅ Implemented |
+| **Automatic recalibration** | Pipeline rules | Driver seat empty ≥ 15 s, then a face appears → full recalibration (new driver). Every 10 min, only while the driver is alert → background baseline refresh that keeps the fatigue history. | ✅ Implemented |
 | **Driver + passengers** | Face position tracking | Driver = the face at the calibrated seat position (green box); every other face is a passenger (blue box). The copilot can ask a passenger to help when the driver is very tired. | ✅ Implemented |
 | **AI voice** | Groq TTS (Orpheus, voice "troy") + pygame playback; offline fallback `pyttsx3` | Speaks each copilot message on the laptop; critical alerts interrupt. The fixed sentences (fallbacks, gesture replies) are pre-generated into `voice_cache/`, so the natural voice also works without the LLM. | ✅ Implemented |
 | **Sound + visual alerts** | Web Audio + CSS | Beep before warnings, double tone + red panel flash for critical. The dashboard **VOICE** button turns the voice on/off (browser speech is used only if the AI voice isn't running). | ✅ Implemented |
@@ -114,7 +116,9 @@ python tools/test_llm.py    # sends a few test situations, no camera needed
 ### 4. Start the Pit Wall dashboard (main demo)
 
 ```powershell
-python dashboard/dashboard.py --detectors drowsiness,head_pose,phone,gestures --llm
+python dashboard/dashboard.py --llm
+# same as: --detectors drowsiness,head_pose,phone,gestures --llm
+# the virtual steering wheel is always on; hide it with --no-wheel
 ```
 
 Open **http://127.0.0.1:8000**. With `--llm` the AI voice speaks on the laptop (button shows **VOICE ON · AI**; click it to mute). Click the page once so the browser may play the alert beeps. Leave out `--llm` to run without the LLM (no API usage; pre-written guidance is shown instead).
@@ -146,10 +150,10 @@ python run.py --camera 1                # try another camera index
 |---|---|---|
 | **Drowsiness** | Eye aspect ratio against calibrated baseline; PERCLOS; mouth aspect ratio | Eyes closed **≥ 1.0 s**, PERCLOS **≥ 25% in a 60 s window**, or mouth open **≥ 1.2 s** |
 | **Head pose** | Yaw / pitch relative to the calibrated forward pose; gaze-down cues | Looking away **≥ 2 s** (down = critical) |
-| **Phone / drink** | YOLO11s detections inside an approximate driver zone, with temporal voting | Phone: **3 of 5** recent YOLO passes; drink: **2 of 5** (often half-hidden by the hand); sustained **≥ 1 s** |
+| **Phone / drink** | YOLO11s detections inside an approximate driver zone, with temporal voting; a "phone" covered by a flat hand (straight fingers) is rejected | Phone: **3 of 5** recent YOLO passes; drink: **2 of 5** (often half-hidden by the hand); sustained **≥ 1 s**. **Phone call pose:** a driver hand held at the ear for **2 s** counts as a phone call even if the phone is hidden |
 | **Gestures** | Gesture model + landmark geometry check, majority vote | Same gesture in **6 of 10** frames, then held **1.8 s** (open palm) or **1.0 s** (others) |
 
-Thresholds are **demo configuration**, not automotive-certified safety limits. Adjust them in [`src/dms/config.py`](src/dms/config.py). A **5-second event cooldown** prevents repetitive notifications. **Driver vs. passenger:** the driver is the face in the middle of the image at calibration; after that the system follows that seat position and ignores faces elsewhere (a passenger leaning in is not taken as the driver). Press **RECALIBRATE** to lock onto a new driver. This is a position heuristic, not identity recognition. Calibration only counts time while a face is visible. Head-down posture suppresses misleading eye-closure interpretation.
+Thresholds are **demo configuration**, not automotive-certified safety limits. Adjust them in [`src/dms/config.py`](src/dms/config.py). A **5-second event cooldown** prevents repetitive notifications. **Driver vs. passenger:** the driver is the face closest to the driver's seat (left side of the image, `driver_seat_x` in the config) at calibration; only the driver's hands can make gestures; after that the system follows that seat position and ignores faces elsewhere (a passenger leaning in is not taken as the driver). Press **RECALIBRATE** to lock onto a new driver. This is a position heuristic, not identity recognition. Calibration only counts time while a face is visible. **Recalibration** happens on the RECALIBRATE button, automatically after the driver's seat was empty for 15 s (driver change), and as a 10-minute background baseline refresh that only runs while the driver is alert (a tired face is never learned as "normal"). Head-down posture suppresses misleading eye-closure interpretation.
 
 ### ✋ Gestures — the driver talks back
 
@@ -160,6 +164,8 @@ Thresholds are **demo configuration**, not automotive-certified safety limits. A
 | 👎 Thumbs down | "I need a break" | The copilot suggests stopping at the next safe place |
 | ✌️ Victory | "How am I doing?" | The copilot gives a short status report of the drive |
 | ✊ Fist | — | Ignored on purpose: hands gripping the wheel look like fists |
+
+Only the **driver's** hands count — passenger gestures are ignored. The open palm is ignored while the driver is on the phone (phone seen or hand at the ear), and needs 4 clearly straight fingers.
 
 ### Example event payload
 
@@ -224,7 +230,8 @@ AI_VibeCoders/
 │   │   ├── head_pose.py       # Orientation, gaze and distraction
 │   │   ├── phone.py           # YOLO11s phone / drink recognition (background thread)
 │   │   ├── gestures.py        # Gesture classification + meanings
-│   │   └── occupants.py       # Driver + passenger tracking
+│   │   ├── occupants.py       # Driver + passenger tracking
+│   │   └── wheel.py           # Hands on the (virtual) steering wheel
 │   └── agent/
 │       ├── llm.py             # LLM client (Groq / Gemini / Ollama)
 │       ├── context.py         # Driver summary + attention score

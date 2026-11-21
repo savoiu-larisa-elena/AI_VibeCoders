@@ -3,6 +3,7 @@ from .drowsiness import DrowsinessDetector
 from .gestures import GestureDetector
 from .head_pose import HeadPoseDetector
 from .occupants import OccupantsDetector
+from .wheel import WheelDetector
 
 
 def _phone():
@@ -17,4 +18,5 @@ DETECTORS = {
     "phone": _phone,
     "gestures": lambda: GestureDetector,
     "occupants": lambda: OccupantsDetector,   # added automatically when face detection runs
+    "wheel": lambda: WheelDetector,           # optional: virtual steering wheel (hands on wheel)
 }

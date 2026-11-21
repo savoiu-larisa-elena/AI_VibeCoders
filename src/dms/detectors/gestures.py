@@ -10,6 +10,8 @@
 
 A hand that holds a drink or phone (box from the phone detector overlaps the hand) is
 ignored, and an open palm needs 4 STRAIGHT fingers - a cup grip is spread but curved.
+Only the DRIVER's hands count (passenger gestures are ignored), and the open palm is
+ignored completely while the driver is on the phone (seen, or hand at the ear).
 
 Accuracy (from live testing: fist was read as thumbs-up, palm was missed):
   1. MediaPipe's gesture model gives a first guess.
@@ -25,6 +27,7 @@ import cv2
 import numpy as np
 
 from ..events import Event, Severity
+from ..face_utils import driver_zone, in_box
 from .base import Detector, DetectorOutput, FrameContext
 
 MEANINGS = {
@@ -44,10 +47,11 @@ INDEX_MCP = 5
 FINGERS = [(6, 8), (10, 12), (14, 16), (18, 20)]   # (PIP, TIP) for index, middle, ring, pinky
 FINGER_CHAINS = [(5, 6, 7, 8), (9, 10, 11, 12), (13, 14, 15, 16), (17, 18, 19, 20)]  # MCP..TIP
 MIDDLE_MCP = 9
-STRAIGHT_RATIO = 0.85   # finger straightness needed for an open palm (1.0 = perfectly straight)
+STRAIGHT_RATIO = 0.85   # default finger straightness (1.0 = perfectly straight)
+PALM_STRAIGHTNESS = 0.90  # stricter, for the open palm (config.gesture.open_palm_straightness)
 
 
-def straight_fingers(lm, w: int, h: int) -> int:
+def straight_fingers(lm, w: int, h: int, ratio: float = STRAIGHT_RATIO) -> int:
     """How many of the 4 fingers are STRAIGHT (not curved).
     Straightness = MCP->tip distance / length along the finger joints.
     Fingers wrapped around a cup are spread but curved (~0.6-0.8), an open palm is ~0.95."""
@@ -56,7 +60,7 @@ def straight_fingers(lm, w: int, h: int) -> int:
     for chain in FINGER_CHAINS:
         along = sum(float(np.linalg.norm(p[a] - p[b])) for a, b in zip(chain, chain[1:]))
         direct = float(np.linalg.norm(p[chain[0]] - p[chain[-1]]))
-        if along > 0 and direct / along >= STRAIGHT_RATIO:
+        if along > 0 and direct / along >= ratio:
             n += 1
     return n
 
@@ -81,7 +85,7 @@ def holds_object(hbox, objects) -> str | None:
     return None
 
 
-def classify_geometry(lm, w: int, h: int) -> str | None:
+def classify_geometry(lm, w: int, h: int, palm_straightness: float = PALM_STRAIGHTNESS) -> str | None:
     """Rule-based gesture from landmark positions. Returns None when unsure."""
     p = np.array([(q.x * w, q.y * h) for q in lm])
     dist = lambda a, b: float(np.linalg.norm(p[a] - p[b]))  # noqa: E731
@@ -102,7 +106,7 @@ def classify_geometry(lm, w: int, h: int) -> str | None:
 
     if n_ext >= 4:
         # spread AND straight; fingers curled around a cup are spread but curved
-        return "Open_Palm" if straight_fingers(lm, w, h) >= 4 else None
+        return "Open_Palm" if straight_fingers(lm, w, h, palm_straightness) >= 4 else None
     if extended[0] and extended[1] and curled[2] and curled[3]:
         return "Victory"
     if extended[0] and curled[1] and curled[2] and curled[3]:
@@ -119,7 +123,7 @@ def classify_geometry(lm, w: int, h: int) -> str | None:
 
 class GestureDetector(Detector):
     name = "gestures"
-    needs = {"hands"}
+    needs = {"hands", "face"}   # face: only the DRIVER's hands may make gestures
 
     def __init__(self, config):
         super().__init__(config)
@@ -137,7 +141,14 @@ class GestureDetector(Detector):
             return None, 0.0
         h, w = ctx.frame.shape[:2]
         best, best_score, debug = None, 0.0, []
+        # only the driver may give commands: hands outside the driver's area (= passenger's)
+        # are ignored; no driver visible -> no gestures at all
+        zone = driver_zone(ctx.face, w, h, 1.6)
+        palm_ratio = self.cfg.open_palm_straightness
         for i, lm in enumerate(res.hand_landmarks):
+            if zone is None or not in_box(lm[9].x * w, lm[9].y * h, zone):
+                debug.append("not the driver's hand -> ignored")
+                continue
             # a hand holding a drink/phone is busy, not gesturing
             held = holds_object(hand_box(lm, w, h), ctx.objects)
             if held:
@@ -146,17 +157,20 @@ class GestureDetector(Detector):
             top = res.gestures[i][0] if i < len(res.gestures) and res.gestures[i] else None
             model_label = top.category_name if top and top.category_name != "None" else None
             model_score = top.score if top else 0.0
-            geo = classify_geometry(lm, w, h)
+            geo = classify_geometry(lm, w, h, palm_ratio)
             if geo:
                 # geometry is the referee: it agrees -> keep model confidence; disagrees -> trust geometry
                 label, score = geo, (model_score if model_label == geo else 0.7)
             elif model_label and model_score >= self.cfg.min_score.get(model_label, 0.75):
                 label, score = model_label, model_score
                 # the model alone also confuses a cup grip with an open palm
-                if label == "Open_Palm" and straight_fingers(lm, w, h) < 4:
+                if label == "Open_Palm" and straight_fingers(lm, w, h, palm_ratio) < 4:
                     label, score = None, 0.0
             else:
                 label, score = None, 0.0
+            if label == "Open_Palm" and ctx.phone_busy:
+                debug.append("on the phone -> open palm ignored")
+                continue
             debug.append(f"model={model_label or '-'} geo={geo or '-'}")
             if label and score > best_score:
                 best, best_score = label, score

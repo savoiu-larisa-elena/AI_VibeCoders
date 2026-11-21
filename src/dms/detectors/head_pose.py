@@ -23,8 +23,11 @@ class HeadPoseDetector(Detector):
         self.cfg = config.head_pose
         self.recalibrate()
 
-    def recalibrate(self):
+    def recalibrate(self, soft: bool = False):
         self._calib: list[tuple[float, float]] = []
+        self._needs_baseline = True
+        if soft:                       # keep the old "road" pose until the new one is learned
+            return
         self.baseline: tuple[float, float] | None = None
         self._away_since: float | None = None
         self._alerted = False
@@ -39,8 +42,9 @@ class HeadPoseDetector(Detector):
 
         if ctx.calibrating:
             self._calib.append((pitch, yaw))
-        elif self.baseline is None and self._calib:
+        elif self._needs_baseline and self._calib:
             self.baseline = tuple(np.median(np.array(self._calib), axis=0))
+            self._needs_baseline, self._calib = False, []
 
         bp, by = self.baseline or (0.0, 0.0)
         rel_pitch = (pitch - bp) * self.cfg.pitch_sign
@@ -67,7 +71,8 @@ class HeadPoseDetector(Detector):
             direction = "road"
 
         away_for = 0.0
-        if direction != "road" and not ctx.calibrating:
+        # during a full calibration nothing is timed; during a soft refresh monitoring continues
+        if direction != "road" and not (ctx.calibrating and not ctx.soft_calibrating):
             self._away_since = self._away_since or ctx.ts
             away_for = ctx.ts - self._away_since
         else:
