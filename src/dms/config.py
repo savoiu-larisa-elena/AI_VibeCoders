@@ -72,8 +72,14 @@ class PhoneConfig:
 
 @dataclass
 class GestureConfig:
-    min_score: float = 0.6
-    hold_seconds: float = 0.5   # gesture must be held this long to count (avoids flicker)
+    # model-only confidence needed when the geometric check is unsure
+    min_score: dict = field(default_factory=lambda: {
+        "Thumb_Up": 0.80, "Thumb_Down": 0.80, "Open_Palm": 0.55, "Victory": 0.70})
+    vote_window: int = 10       # look at the last 10 frames...
+    votes_needed: int = 6       # ...the same gesture must win at least 6 of them
+    hold_seconds: float = 0.6   # then be held this long to count
+    # gestures that trigger something (fist is ignored: hands on the wheel look like fists)
+    active: tuple = ("Thumb_Up", "Open_Palm", "Thumb_Down", "Victory")
 
 
 @dataclass
