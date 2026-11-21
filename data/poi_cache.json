@@ -1,0 +1,3429 @@
+{
+"source": "OpenStreetMap contributors (Overpass API), corridor 2.5 km around data/route_cache.json",
+"places": [
+{
+"name": "Topaz Boutique",
+"kind": "hotel",
+"lat": 46.770415,
+"lon": 23.608807,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel Onix",
+"kind": "hotel",
+"lat": 46.770951,
+"lon": 23.608716,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Pensiunea Caramel",
+"kind": "hotel",
+"lat": 46.752452,
+"lon": 23.627948,
+"note": "hotel",
+"named": true
+},
+{
+"name": "City Central și cămin studențesc",
+"kind": "hotel",
+"lat": 46.765929,
+"lon": 23.585474,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel Capitolina",
+"kind": "hotel",
+"lat": 46.764188,
+"lon": 23.585048,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Pensiunea Heltai",
+"kind": "hotel",
+"lat": 46.76566,
+"lon": 23.581565,
+"note": "guest house",
+"named": true
+},
+{
+"name": "OMV",
+"kind": "fuel",
+"lat": 46.537623,
+"lon": 23.78352,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Agape",
+"kind": "hotel",
+"lat": 46.77036,
+"lon": 23.591637,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Vila Vanda",
+"kind": "hotel",
+"lat": 46.767947,
+"lon": 23.608914,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel Olimp",
+"kind": "hotel",
+"lat": 46.754829,
+"lon": 23.58502,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Rest area",
+"kind": "rest_stop",
+"lat": 46.710692,
+"lon": 23.652605,
+"note": "parking",
+"named": false
+},
+{
+"name": "Vila Meteor",
+"kind": "hotel",
+"lat": 46.754366,
+"lon": 23.590109,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Pax Hotel",
+"kind": "hotel",
+"lat": 46.784001,
+"lon": 23.587263,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel Beyfin",
+"kind": "hotel",
+"lat": 46.77126,
+"lon": 23.596051,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Cluj Apartments - Deco",
+"kind": "hotel",
+"lat": 46.771187,
+"lon": 23.587905,
+"note": "hotel",
+"named": true
+},
+{
+"name": "A&A Import",
+"kind": "fuel",
+"lat": 46.55509,
+"lon": 23.771622,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Cabrio",
+"kind": "hotel",
+"lat": 46.753987,
+"lon": 23.60466,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel Stadion",
+"kind": "hotel",
+"lat": 46.772246,
+"lon": 23.575378,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Piccola Italia",
+"kind": "hotel",
+"lat": 46.776493,
+"lon": 23.585116,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Vila Casa Alba",
+"kind": "hotel",
+"lat": 46.776744,
+"lon": 23.584842,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Hotel Restaurant Transilvania",
+"kind": "hotel",
+"lat": 46.772653,
+"lon": 23.589507,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Pensiunea Boema",
+"kind": "hotel",
+"lat": 46.76558,
+"lon": 23.572802,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Pensiune Junior",
+"kind": "hotel",
+"lat": 46.784815,
+"lon": 23.591659,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Hotel Hanul Fullton",
+"kind": "hotel",
+"lat": 46.777964,
+"lon": 23.58954,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Rest area",
+"kind": "rest_stop",
+"lat": 46.773104,
+"lon": 23.624932,
+"note": "parking",
+"named": false
+},
+{
+"name": "Rest area",
+"kind": "rest_stop",
+"lat": 46.773256,
+"lon": 23.624039,
+"note": "parking",
+"named": false
+},
+{
+"name": "Pensiunea Mellis",
+"kind": "hotel",
+"lat": 46.764504,
+"lon": 23.573306,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Lucas Aparthotel",
+"kind": "hotel",
+"lat": 46.767071,
+"lon": 23.588697,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Vila Parc",
+"kind": "hotel",
+"lat": 46.770263,
+"lon": 23.571685,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Camere regim hotelier",
+"kind": "hotel",
+"lat": 46.781745,
+"lon": 23.576873,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Vidalis",
+"kind": "hotel",
+"lat": 46.764626,
+"lon": 23.587943,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Pensiunea Cluj",
+"kind": "hotel",
+"lat": 46.753242,
+"lon": 23.588035,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Alex & George Boutique Hotel",
+"kind": "hotel",
+"lat": 46.759218,
+"lon": 23.598114,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Vila Siago",
+"kind": "hotel",
+"lat": 46.763965,
+"lon": 23.588165,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel Alexis",
+"kind": "hotel",
+"lat": 46.771854,
+"lon": 23.602595,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Pensiunea Dorobanților",
+"kind": "hotel",
+"lat": 46.77185,
+"lon": 23.602486,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Panorama Business Inn",
+"kind": "hotel",
+"lat": 46.779446,
+"lon": 23.561704,
+"note": "motel",
+"named": true
+},
+{
+"name": "98",
+"kind": "fuel",
+"lat": 46.760843,
+"lon": 23.597564,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Lukoil",
+"kind": "fuel",
+"lat": 46.691646,
+"lon": 23.627992,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Giandra",
+"kind": "hotel",
+"lat": 46.58997,
+"lon": 23.751131,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Pensiunea Allogio",
+"kind": "hotel",
+"lat": 46.775795,
+"lon": 23.594313,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Hotel Gala",
+"kind": "hotel",
+"lat": 46.748228,
+"lon": 23.592693,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Aparthotel The Cluj Horizon Sigma Center",
+"kind": "hotel",
+"lat": 46.749236,
+"lon": 23.593225,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Pensiunea Paris",
+"kind": "hotel",
+"lat": 46.783158,
+"lon": 23.600315,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Pensiunea Monor",
+"kind": "hotel",
+"lat": 46.776024,
+"lon": 23.627724,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel Biscuit",
+"kind": "hotel",
+"lat": 46.75457,
+"lon": 23.580933,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Pensiunea Maria",
+"kind": "hotel",
+"lat": 46.541099,
+"lon": 23.750397,
+"note": "motel",
+"named": true
+},
+{
+"name": "Hotel Potaissa",
+"kind": "hotel",
+"lat": 46.573683,
+"lon": 23.784862,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel Palace",
+"kind": "hotel",
+"lat": 46.572211,
+"lon": 23.786035,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Pușca și Cureaua Lată",
+"kind": "hotel",
+"lat": 46.548215,
+"lon": 23.781497,
+"note": "hotel",
+"named": true
+},
+{
+"name": "MOL",
+"kind": "fuel",
+"lat": 46.562221,
+"lon": 23.787509,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Casa Bătrânească",
+"kind": "hotel",
+"lat": 46.719094,
+"lon": 23.618782,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Castelul Prințul Vânător",
+"kind": "hotel",
+"lat": 46.572404,
+"lon": 23.787232,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel Meteor",
+"kind": "hotel",
+"lat": 46.77018,
+"lon": 23.593794,
+"note": "hotel",
+"named": true
+},
+{
+"name": "UBA Aparthotel",
+"kind": "hotel",
+"lat": 46.751512,
+"lon": 23.595348,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Casa Alegria",
+"kind": "hotel",
+"lat": 46.557698,
+"lon": 23.798212,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Denisrom",
+"kind": "fuel",
+"lat": 46.57962,
+"lon": 23.766096,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Hotel Centrum",
+"kind": "hotel",
+"lat": 46.576005,
+"lon": 23.783774,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Vila Aurică",
+"kind": "hotel",
+"lat": 46.540218,
+"lon": 23.757732,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Helga House",
+"kind": "hotel",
+"lat": 46.573618,
+"lon": 23.781079,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Pensiunea Gil",
+"kind": "hotel",
+"lat": 46.575353,
+"lon": 23.779543,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Vila Adriano",
+"kind": "hotel",
+"lat": 46.574876,
+"lon": 23.78538,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Casa Cedric",
+"kind": "hotel",
+"lat": 46.575548,
+"lon": 23.786611,
+"note": "guest house",
+"named": true
+},
+{
+"name": "BigCitty",
+"kind": "hotel",
+"lat": 46.750357,
+"lon": 23.582209,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Casa Rațiu",
+"kind": "hotel",
+"lat": 46.570379,
+"lon": 23.784918,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Casa Sol",
+"kind": "hotel",
+"lat": 46.578651,
+"lon": 23.774538,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Salis",
+"kind": "hotel",
+"lat": 46.580498,
+"lon": 23.771445,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Pensiunea Abel",
+"kind": "hotel",
+"lat": 46.540819,
+"lon": 23.765506,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Elena Haus",
+"kind": "hotel",
+"lat": 46.789405,
+"lon": 23.578652,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Augusta",
+"kind": "hotel",
+"lat": 46.55722,
+"lon": 23.800483,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Pensiunea F&G",
+"kind": "hotel",
+"lat": 46.573721,
+"lon": 23.785765,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Casa Arva",
+"kind": "hotel",
+"lat": 46.575954,
+"lon": 23.789604,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Casa Mirela",
+"kind": "hotel",
+"lat": 46.580226,
+"lon": 23.79552,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Casa Montana",
+"kind": "hotel",
+"lat": 46.579275,
+"lon": 23.794476,
+"note": "guest house",
+"named": true
+},
+{
+"name": "La Grigore",
+"kind": "hotel",
+"lat": 46.576083,
+"lon": 23.776934,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Casa Tudor",
+"kind": "hotel",
+"lat": 46.577953,
+"lon": 23.777169,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Casa Felix",
+"kind": "hotel",
+"lat": 46.57558,
+"lon": 23.784165,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Casa Verona",
+"kind": "hotel",
+"lat": 46.760358,
+"lon": 23.591711,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Pensiunea Excelența",
+"kind": "hotel",
+"lat": 46.765118,
+"lon": 23.588348,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Daddy House",
+"kind": "hotel",
+"lat": 46.578108,
+"lon": 23.782055,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Casa Voica",
+"kind": "hotel",
+"lat": 46.581183,
+"lon": 23.779067,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Casa Ada",
+"kind": "hotel",
+"lat": 46.583046,
+"lon": 23.777438,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Casa Nobilium",
+"kind": "hotel",
+"lat": 46.58168,
+"lon": 23.774338,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Casa Zece",
+"kind": "hotel",
+"lat": 46.582522,
+"lon": 23.774439,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Casa Sorriso",
+"kind": "hotel",
+"lat": 46.581824,
+"lon": 23.774426,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Casa Vali",
+"kind": "hotel",
+"lat": 46.583713,
+"lon": 23.776007,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Vila Rica",
+"kind": "hotel",
+"lat": 46.583889,
+"lon": 23.76346,
+"note": "guest house",
+"named": true
+},
+{
+"name": "La Pitici",
+"kind": "hotel",
+"lat": 46.581768,
+"lon": 23.766129,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Norm Hill Hotel",
+"kind": "hotel",
+"lat": 46.753745,
+"lon": 23.590981,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Vila Diakonia",
+"kind": "hotel",
+"lat": 46.757426,
+"lon": 23.606978,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Rest area",
+"kind": "rest_stop",
+"lat": 46.727202,
+"lon": 23.64715,
+"note": "parking",
+"named": false
+},
+{
+"name": "Colibri",
+"kind": "hotel",
+"lat": 46.774817,
+"lon": 23.626736,
+"note": "guest house",
+"named": true
+},
+{
+"name": "TCI Social Club",
+"kind": "hotel",
+"lat": 46.752449,
+"lon": 23.632144,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel Platinia",
+"kind": "hotel",
+"lat": 46.763257,
+"lon": 23.572128,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Fuel station",
+"kind": "fuel",
+"lat": 46.588312,
+"lon": 23.756965,
+"note": "fuel, coffee, toilets",
+"named": false
+},
+{
+"name": "The Quare - Smart Hotel",
+"kind": "hotel",
+"lat": 46.772097,
+"lon": 23.588686,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel Vibre",
+"kind": "hotel",
+"lat": 46.765331,
+"lon": 23.605019,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Edith's House",
+"kind": "hotel",
+"lat": 46.583934,
+"lon": 23.771396,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Vila Daniel",
+"kind": "hotel",
+"lat": 46.748099,
+"lon": 23.650004,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Residence Il Lago",
+"kind": "hotel",
+"lat": 46.774373,
+"lon": 23.627974,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Oscar Drive",
+"kind": "fuel",
+"lat": 46.539559,
+"lon": 23.782678,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Palazzo Bellariva Dimora",
+"kind": "hotel",
+"lat": 46.770119,
+"lon": 23.596654,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Pensiunea Salina Gymnasium Potaissa",
+"kind": "hotel",
+"lat": 46.573546,
+"lon": 23.78307,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Vila Ana 2",
+"kind": "hotel",
+"lat": 46.77096,
+"lon": 23.60611,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Sarmihouse",
+"kind": "hotel",
+"lat": 46.775621,
+"lon": 23.622473,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Ferdinand Boutique",
+"kind": "hotel",
+"lat": 46.771872,
+"lon": 23.589748,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Central 28",
+"kind": "hotel",
+"lat": 46.769724,
+"lon": 23.603577,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Max",
+"kind": "hotel",
+"lat": 46.771187,
+"lon": 23.606593,
+"note": "guest house",
+"named": true
+},
+{
+"name": "1568",
+"kind": "hotel",
+"lat": 46.771109,
+"lon": 23.591778,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Casa Alesiv",
+"kind": "hotel",
+"lat": 46.779932,
+"lon": 23.610387,
+"note": "guest house",
+"named": true
+},
+{
+"name": "OMV",
+"kind": "fuel",
+"lat": 46.777817,
+"lon": 23.615416,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "MOL",
+"kind": "fuel",
+"lat": 46.778598,
+"lon": 23.620135,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Camino",
+"kind": "hotel",
+"lat": 46.771017,
+"lon": 23.593252,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Central",
+"kind": "mall",
+"lat": 46.772935,
+"lon": 23.589584,
+"note": "parking, food, toilets",
+"named": true
+},
+{
+"name": "Sigma Shopping Center",
+"kind": "mall",
+"lat": 46.756515,
+"lon": 23.595019,
+"note": "parking, food, toilets",
+"named": true
+},
+{
+"name": "Iulius Mall",
+"kind": "mall",
+"lat": 46.772369,
+"lon": 23.627973,
+"note": "parking, food, toilets",
+"named": true
+},
+{
+"name": "Grand Hotel Italia",
+"kind": "hotel",
+"lat": 46.752866,
+"lon": 23.605794,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Fullton Hotel",
+"kind": "hotel",
+"lat": 46.771386,
+"lon": 23.588753,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Rompetrol",
+"kind": "fuel",
+"lat": 46.747449,
+"lon": 23.59342,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Casa de oaspeți UMF",
+"kind": "hotel",
+"lat": 46.771468,
+"lon": 23.57818,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Golden Tulip Ana Dome",
+"kind": "hotel",
+"lat": 46.751938,
+"lon": 23.57679,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel",
+"kind": "hotel",
+"lat": 46.753743,
+"lon": 23.591039,
+"note": "hotel",
+"named": false
+},
+{
+"name": "Hotel Belvedere",
+"kind": "hotel",
+"lat": 46.774258,
+"lon": 23.581692,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel Royal Classic",
+"kind": "hotel",
+"lat": 46.764241,
+"lon": 23.621048,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Univers T",
+"kind": "hotel",
+"lat": 46.772518,
+"lon": 23.626969,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Grand Hotel Napoca",
+"kind": "hotel",
+"lat": 46.771393,
+"lon": 23.576048,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Pensiunea Arena",
+"kind": "hotel",
+"lat": 46.766262,
+"lon": 23.569823,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Hotel Universitas",
+"kind": "hotel",
+"lat": 46.763524,
+"lon": 23.559509,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel Seven",
+"kind": "hotel",
+"lat": 46.779756,
+"lon": 23.5818,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Ferdinand Galeria",
+"kind": "mall",
+"lat": 46.771762,
+"lon": 23.589982,
+"note": "parking, food, toilets",
+"named": true
+},
+{
+"name": "Hotel Paradis",
+"kind": "hotel",
+"lat": 46.780197,
+"lon": 23.613236,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel Opal",
+"kind": "hotel",
+"lat": 46.76036,
+"lon": 23.613345,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel Delaf",
+"kind": "hotel",
+"lat": 46.77755,
+"lon": 23.617959,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel Oscar",
+"kind": "hotel",
+"lat": 46.768432,
+"lon": 23.561643,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel Victoria",
+"kind": "hotel",
+"lat": 46.771972,
+"lon": 23.594877,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hampton by Hilton Cluj-Napoca",
+"kind": "hotel",
+"lat": 46.77531,
+"lon": 23.601673,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel Cristal",
+"kind": "hotel",
+"lat": 46.764782,
+"lon": 23.572298,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel Ary",
+"kind": "hotel",
+"lat": 46.781417,
+"lon": 23.579482,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Dominus Residence",
+"kind": "hotel",
+"lat": 46.7707,
+"lon": 23.585708,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel Pami",
+"kind": "hotel",
+"lat": 46.761224,
+"lon": 23.567232,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Lukoil",
+"kind": "fuel",
+"lat": 46.761104,
+"lon": 23.566893,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Lukoil",
+"kind": "fuel",
+"lat": 46.780424,
+"lon": 23.595642,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Hotel Beta",
+"kind": "hotel",
+"lat": 46.785985,
+"lon": 23.581118,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Petrom",
+"kind": "fuel",
+"lat": 46.787829,
+"lon": 23.596984,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Vila Astoria",
+"kind": "hotel",
+"lat": 46.774969,
+"lon": 23.585415,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Napoca Oil",
+"kind": "fuel",
+"lat": 46.772044,
+"lon": 23.57587,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Escala Villa",
+"kind": "hotel",
+"lat": 46.77932,
+"lon": 23.583537,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Pensiune Rowa",
+"kind": "hotel",
+"lat": 46.783171,
+"lon": 23.582251,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Pensiunea Schwartz",
+"kind": "hotel",
+"lat": 46.785311,
+"lon": 23.601582,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Verona",
+"kind": "hotel",
+"lat": 46.76142,
+"lon": 23.590025,
+"note": "guest house",
+"named": true
+},
+{
+"name": "MOL",
+"kind": "fuel",
+"lat": 46.755187,
+"lon": 23.586022,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "DD Boutique Apartments",
+"kind": "hotel",
+"lat": 46.779078,
+"lon": 23.625342,
+"note": "hotel",
+"named": true
+},
+{
+"name": "MOL",
+"kind": "fuel",
+"lat": 46.750538,
+"lon": 23.593616,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Lukoil",
+"kind": "fuel",
+"lat": 46.752399,
+"lon": 23.594679,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Hotel Athos RMT",
+"kind": "hotel",
+"lat": 46.753731,
+"lon": 23.611885,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel Meridian",
+"kind": "hotel",
+"lat": 46.762561,
+"lon": 23.597434,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel Confort",
+"kind": "hotel",
+"lat": 46.763812,
+"lon": 23.597631,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Vila Rosetti",
+"kind": "hotel",
+"lat": 46.774998,
+"lon": 23.570635,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Bellagio",
+"kind": "hotel",
+"lat": 46.767663,
+"lon": 23.606683,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Vila Lupsa",
+"kind": "hotel",
+"lat": 46.775696,
+"lon": 23.571959,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Rompetrol",
+"kind": "fuel",
+"lat": 46.788088,
+"lon": 23.57855,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Lucky Star",
+"kind": "hotel",
+"lat": 46.788322,
+"lon": 23.579298,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Lukoil",
+"kind": "fuel",
+"lat": 46.763736,
+"lon": 23.564172,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Casa Remo",
+"kind": "hotel",
+"lat": 46.568426,
+"lon": 23.781682,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Lukoil",
+"kind": "fuel",
+"lat": 46.540352,
+"lon": 23.782972,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Winmarkt",
+"kind": "mall",
+"lat": 46.569999,
+"lon": 23.785889,
+"note": "parking, food, toilets",
+"named": true
+},
+{
+"name": "Lukoil",
+"kind": "fuel",
+"lat": 46.586808,
+"lon": 23.757935,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "MOL",
+"kind": "fuel",
+"lat": 46.587487,
+"lon": 23.758486,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Rompetrol",
+"kind": "fuel",
+"lat": 46.586948,
+"lon": 23.759116,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Euro Oil",
+"kind": "fuel",
+"lat": 46.754019,
+"lon": 23.583888,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Teleschi",
+"kind": "hotel",
+"lat": 46.715908,
+"lon": 23.642829,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Pensiunea Bella Vista",
+"kind": "hotel",
+"lat": 46.580402,
+"lon": 23.789551,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Paprika",
+"kind": "hotel",
+"lat": 46.629093,
+"lon": 23.711127,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Brutarilor Guest House",
+"kind": "hotel",
+"lat": 46.765876,
+"lon": 23.568463,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Ramada",
+"kind": "hotel",
+"lat": 46.764202,
+"lon": 23.598759,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Pensiunea Edy",
+"kind": "hotel",
+"lat": 46.578574,
+"lon": 23.769124,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Hotel Salina Turda",
+"kind": "hotel",
+"lat": 46.590298,
+"lon": 23.786433,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel",
+"kind": "hotel",
+"lat": 46.5853,
+"lon": 23.796182,
+"note": "hotel",
+"named": false
+},
+{
+"name": "Hotel Tămaș",
+"kind": "hotel",
+"lat": 46.776869,
+"lon": 23.618279,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Courtyard by Marriott",
+"kind": "hotel",
+"lat": 46.766965,
+"lon": 23.593261,
+"note": "hotel",
+"named": true
+},
+{
+"name": "MOL",
+"kind": "fuel",
+"lat": 46.772616,
+"lon": 23.606342,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "OMV",
+"kind": "fuel",
+"lat": 46.74452,
+"lon": 23.591816,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "TCI Apartments",
+"kind": "hotel",
+"lat": 46.77789,
+"lon": 23.617796,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Guesthouse",
+"kind": "hotel",
+"lat": 46.583937,
+"lon": 23.771395,
+"note": "guest house",
+"named": false
+},
+{
+"name": "Fuel station",
+"kind": "fuel",
+"lat": 46.531471,
+"lon": 23.781255,
+"note": "fuel, coffee, toilets",
+"named": false
+},
+{
+"name": "Radisson Blu",
+"kind": "hotel",
+"lat": 46.767311,
+"lon": 23.5735,
+"note": "hotel",
+"named": true
+},
+{
+"name": "SunGarden Salin",
+"kind": "hotel",
+"lat": 46.585762,
+"lon": 23.759547,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Casa de Oaspeți „Sfântul Ilie”",
+"kind": "hotel",
+"lat": 46.765174,
+"lon": 23.588319,
+"note": "guest house",
+"named": true
+},
+{
+"name": "DoubleTree by Hilton - City Plaza",
+"kind": "hotel",
+"lat": 46.769559,
+"lon": 23.584126,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Platinia Shopping Center",
+"kind": "mall",
+"lat": 46.763555,
+"lon": 23.57149,
+"note": "parking, food, toilets",
+"named": true
+},
+{
+"name": "Rompetrol",
+"kind": "fuel",
+"lat": 46.322489,
+"lon": 23.717858,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Lukoil",
+"kind": "fuel",
+"lat": 46.206095,
+"lon": 23.67375,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Petrom",
+"kind": "fuel",
+"lat": 46.217087,
+"lon": 23.679202,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Florea Grup",
+"kind": "fuel",
+"lat": 46.305158,
+"lon": 23.71604,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Hotel Restaurant Rustiq",
+"kind": "hotel",
+"lat": 46.135977,
+"lon": 23.636511,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Benstar",
+"kind": "fuel",
+"lat": 46.178859,
+"lon": 23.621727,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Casa Florică",
+"kind": "hotel",
+"lat": 46.320522,
+"lon": 23.714359,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Florea Oil",
+"kind": "fuel",
+"lat": 46.12287,
+"lon": 23.622621,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Hotel Astoria",
+"kind": "hotel",
+"lat": 46.122493,
+"lon": 23.622179,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Lukoil",
+"kind": "fuel",
+"lat": 46.299258,
+"lon": 23.709559,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Aral",
+"kind": "fuel",
+"lat": 46.100942,
+"lon": 23.603078,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Hotel Bleumarin",
+"kind": "hotel",
+"lat": 46.181806,
+"lon": 23.656559,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Benestar",
+"kind": "fuel",
+"lat": 46.161587,
+"lon": 23.646073,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Casa Zăuan",
+"kind": "hotel",
+"lat": 46.159037,
+"lon": 23.644757,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Casa Luk",
+"kind": "hotel",
+"lat": 46.311212,
+"lon": 23.726493,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Vila Petrică",
+"kind": "hotel",
+"lat": 46.308694,
+"lon": 23.726473,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Pensiunea Residence Aiud",
+"kind": "hotel",
+"lat": 46.322461,
+"lon": 23.715115,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Vila Iacob",
+"kind": "hotel",
+"lat": 46.321889,
+"lon": 23.714503,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Casa Minu",
+"kind": "hotel",
+"lat": 46.315727,
+"lon": 23.726085,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Vila Dinel",
+"kind": "hotel",
+"lat": 46.177058,
+"lon": 23.634445,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Vila Matei",
+"kind": "hotel",
+"lat": 46.364814,
+"lon": 23.708696,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Pensiunea Galtiu",
+"kind": "hotel",
+"lat": 46.150631,
+"lon": 23.672973,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Casa Plăieșeanu",
+"kind": "hotel",
+"lat": 46.204557,
+"lon": 23.686505,
+"note": "guest house",
+"named": true
+},
+{
+"name": "MOL",
+"kind": "fuel",
+"lat": 46.316303,
+"lon": 23.722347,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Rompetrol",
+"kind": "fuel",
+"lat": 46.387835,
+"lon": 23.780003,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Florea Oil",
+"kind": "fuel",
+"lat": 46.305152,
+"lon": 23.715993,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Hotel Victoria",
+"kind": "hotel",
+"lat": 46.310139,
+"lon": 23.721826,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Rest area",
+"kind": "rest_stop",
+"lat": 46.346382,
+"lon": 23.72828,
+"note": "parking",
+"named": false
+},
+{
+"name": "Rest area",
+"kind": "rest_stop",
+"lat": 46.34489,
+"lon": 23.73099,
+"note": "parking",
+"named": false
+},
+{
+"name": "Rest area",
+"kind": "rest_stop",
+"lat": 46.442719,
+"lon": 23.798675,
+"note": "parking",
+"named": false
+},
+{
+"name": "Rest area",
+"kind": "rest_stop",
+"lat": 46.440264,
+"lon": 23.79807,
+"note": "parking",
+"named": false
+},
+{
+"name": "Rest area",
+"kind": "rest_stop",
+"lat": 46.171592,
+"lon": 23.663882,
+"note": "parking",
+"named": false
+},
+{
+"name": "Rest area",
+"kind": "rest_stop",
+"lat": 46.171759,
+"lon": 23.664141,
+"note": "parking",
+"named": false
+},
+{
+"name": "Rest area",
+"kind": "rest_stop",
+"lat": 46.172291,
+"lon": 23.663596,
+"note": "parking",
+"named": false
+},
+{
+"name": "Partener Rompetrol",
+"kind": "fuel",
+"lat": 45.931449,
+"lon": 23.743918,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Lukoil",
+"kind": "fuel",
+"lat": 46.054128,
+"lon": 23.570904,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Pensiunea Boema",
+"kind": "hotel",
+"lat": 45.992971,
+"lon": 23.551205,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Hotel Valea Sebeșului",
+"kind": "hotel",
+"lat": 45.957139,
+"lon": 23.56763,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Rest area",
+"kind": "rest_stop",
+"lat": 45.905786,
+"lon": 23.740525,
+"note": "parking",
+"named": false
+},
+{
+"name": "Rest area",
+"kind": "rest_stop",
+"lat": 45.921137,
+"lon": 23.631479,
+"note": "parking",
+"named": false
+},
+{
+"name": "Rompetrol",
+"kind": "fuel",
+"lat": 45.881823,
+"lon": 23.797894,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Hotel Rin",
+"kind": "hotel",
+"lat": 45.88008,
+"lon": 23.799527,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Lukoil",
+"kind": "fuel",
+"lat": 46.082826,
+"lon": 23.579919,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Rompetrol",
+"kind": "fuel",
+"lat": 46.059023,
+"lon": 23.575422,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Vila Steaua Nordului",
+"kind": "hotel",
+"lat": 46.080925,
+"lon": 23.568222,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Perla Mureșului",
+"kind": "hotel",
+"lat": 46.036683,
+"lon": 23.561801,
+"note": "guest house",
+"named": true
+},
+{
+"name": "La Mesteceni Country Club",
+"kind": "hotel",
+"lat": 45.920612,
+"lon": 23.624424,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Pensiune MaryLou",
+"kind": "hotel",
+"lat": 46.064744,
+"lon": 23.557317,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Florea Oil",
+"kind": "fuel",
+"lat": 46.0743,
+"lon": 23.56952,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Hotel Transilvania",
+"kind": "hotel",
+"lat": 46.07158,
+"lon": 23.582314,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel Medieval",
+"kind": "hotel",
+"lat": 46.066287,
+"lon": 23.573441,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Allegria",
+"kind": "hotel",
+"lat": 46.021625,
+"lon": 23.543113,
+"note": "hotel",
+"named": true
+},
+{
+"name": "OMV",
+"kind": "fuel",
+"lat": 46.090031,
+"lon": 23.59394,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Hotel Hermes",
+"kind": "hotel",
+"lat": 46.075366,
+"lon": 23.559669,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel Central",
+"kind": "hotel",
+"lat": 46.070491,
+"lon": 23.566047,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Rest area",
+"kind": "rest_stop",
+"lat": 45.902862,
+"lon": 23.744712,
+"note": "parking",
+"named": false
+},
+{
+"name": "La Maison de Caroline",
+"kind": "hotel",
+"lat": 46.069908,
+"lon": 23.584012,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel Comfort",
+"kind": "hotel",
+"lat": 45.907682,
+"lon": 23.73867,
+"note": "hotel",
+"named": true
+},
+{
+"name": "MOL",
+"kind": "fuel",
+"lat": 45.920753,
+"lon": 23.654826,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "MOL",
+"kind": "fuel",
+"lat": 45.922349,
+"lon": 23.664418,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Casa Teodor",
+"kind": "hotel",
+"lat": 46.101806,
+"lon": 23.582153,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Vila Stelian",
+"kind": "hotel",
+"lat": 46.075235,
+"lon": 23.580796,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Vila Țentea",
+"kind": "hotel",
+"lat": 46.051239,
+"lon": 23.537269,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Vila Dutu",
+"kind": "hotel",
+"lat": 46.08579,
+"lon": 23.558913,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Hotel Elisabeta",
+"kind": "hotel",
+"lat": 46.086399,
+"lon": 23.563922,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel Tara",
+"kind": "hotel",
+"lat": 46.095467,
+"lon": 23.59778,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Horia",
+"kind": "hotel",
+"lat": 46.031483,
+"lon": 23.572296,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Vila Vasilescu",
+"kind": "hotel",
+"lat": 46.087856,
+"lon": 23.56496,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Drumul Dragostei",
+"kind": "hotel",
+"lat": 46.025052,
+"lon": 23.538256,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Lukoil",
+"kind": "fuel",
+"lat": 46.00042,
+"lon": 23.543858,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Hotel Leul de Aur",
+"kind": "hotel",
+"lat": 45.957333,
+"lon": 23.566556,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Europa",
+"kind": "fuel",
+"lat": 46.076656,
+"lon": 23.621526,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Fan",
+"kind": "hotel",
+"lat": 46.057607,
+"lon": 23.576835,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Pensiunea Neptun",
+"kind": "hotel",
+"lat": 46.057225,
+"lon": 23.576632,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Petrom",
+"kind": "fuel",
+"lat": 46.057354,
+"lon": 23.573782,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Prestige",
+"kind": "hotel",
+"lat": 46.07808,
+"lon": 23.573504,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Rompetrol",
+"kind": "fuel",
+"lat": 46.097479,
+"lon": 23.600357,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Ave, Alba!",
+"kind": "hotel",
+"lat": 46.072257,
+"lon": 23.566917,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Step Inn",
+"kind": "hotel",
+"lat": 46.058425,
+"lon": 23.577111,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Vila Lion",
+"kind": "hotel",
+"lat": 45.959444,
+"lon": 23.569901,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Rest area",
+"kind": "rest_stop",
+"lat": 45.919344,
+"lon": 23.697798,
+"note": "parking",
+"named": false
+},
+{
+"name": "Euroil",
+"kind": "fuel",
+"lat": 46.071246,
+"lon": 23.565292,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "OMV",
+"kind": "fuel",
+"lat": 45.900781,
+"lon": 23.759277,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "OMV",
+"kind": "fuel",
+"lat": 45.900677,
+"lon": 23.76414,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Pensiunea Element",
+"kind": "hotel",
+"lat": 46.071832,
+"lon": 23.551271,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Armada Aparthotel",
+"kind": "hotel",
+"lat": 46.072972,
+"lon": 23.561651,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Oli House",
+"kind": "hotel",
+"lat": 46.073388,
+"lon": 23.572015,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Hotel Mariss",
+"kind": "hotel",
+"lat": 46.053692,
+"lon": 23.570144,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel Zouk",
+"kind": "hotel",
+"lat": 46.090116,
+"lon": 23.593239,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Gazprom",
+"kind": "fuel",
+"lat": 45.910005,
+"lon": 23.735815,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Alba Mall",
+"kind": "mall",
+"lat": 46.080026,
+"lon": 23.585077,
+"note": "parking, food, toilets",
+"named": true
+},
+{
+"name": "Hotel Central",
+"kind": "hotel",
+"lat": 46.070569,
+"lon": 23.566046,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Mercur City Center",
+"kind": "mall",
+"lat": 46.073986,
+"lon": 23.57955,
+"note": "parking, food, toilets",
+"named": true
+},
+{
+"name": "Euroil",
+"kind": "fuel",
+"lat": 46.057984,
+"lon": 23.575271,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "MOL",
+"kind": "fuel",
+"lat": 45.959906,
+"lon": 23.549458,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Lukoil",
+"kind": "fuel",
+"lat": 45.960075,
+"lon": 23.548481,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Fan Oil",
+"kind": "fuel",
+"lat": 45.947693,
+"lon": 23.586958,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Hotel Fan",
+"kind": "hotel",
+"lat": 45.947564,
+"lon": 23.587505,
+"note": "hotel",
+"named": true
+},
+{
+"name": "MOL",
+"kind": "fuel",
+"lat": 45.947612,
+"lon": 23.585898,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Motorway services",
+"kind": "rest_stop",
+"lat": 45.922506,
+"lon": 23.665068,
+"note": "parking",
+"named": false
+},
+{
+"name": "Parcare de scurtă durată Sebeș Vest",
+"kind": "rest_stop",
+"lat": 45.978544,
+"lon": 23.522412,
+"note": "parking",
+"named": true
+},
+{
+"name": "Aura Unirii",
+"kind": "hotel",
+"lat": 46.068216,
+"lon": 23.578013,
+"note": "hotel",
+"named": true
+},
+{
+"name": "B & B",
+"kind": "fuel",
+"lat": 46.081666,
+"lon": 23.561482,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Pensiunea Select",
+"kind": "hotel",
+"lat": 46.032419,
+"lon": 23.555528,
+"note": "motel",
+"named": true
+},
+{
+"name": "Petrom",
+"kind": "fuel",
+"lat": 46.032683,
+"lon": 23.554184,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Yvy",
+"kind": "hotel",
+"lat": 45.976419,
+"lon": 23.556783,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Rompetrol",
+"kind": "fuel",
+"lat": 45.976767,
+"lon": 23.557224,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Motorway services",
+"kind": "rest_stop",
+"lat": 45.92066,
+"lon": 23.654317,
+"note": "parking",
+"named": false
+},
+{
+"name": "Hotel Axa",
+"kind": "hotel",
+"lat": 45.916479,
+"lon": 23.719847,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Pensiunea Cerbu Arini",
+"kind": "hotel",
+"lat": 46.012782,
+"lon": 23.552667,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Hotel Nicky",
+"kind": "hotel",
+"lat": 45.942845,
+"lon": 23.559843,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Parcare de scurtă durată",
+"kind": "rest_stop",
+"lat": 45.900687,
+"lon": 23.763058,
+"note": "parking",
+"named": true
+},
+{
+"name": "Parcare de scurtă durată",
+"kind": "rest_stop",
+"lat": 45.900779,
+"lon": 23.760285,
+"note": "parking",
+"named": true
+},
+{
+"name": "Rest area",
+"kind": "rest_stop",
+"lat": 46.019797,
+"lon": 23.568337,
+"note": "parking",
+"named": false
+},
+{
+"name": "Rest area",
+"kind": "rest_stop",
+"lat": 46.018865,
+"lon": 23.565124,
+"note": "parking",
+"named": false
+},
+{
+"name": "Fuel station",
+"kind": "fuel",
+"lat": 45.920749,
+"lon": 23.654826,
+"note": "fuel, coffee, toilets",
+"named": false
+},
+{
+"name": "Fuel station",
+"kind": "fuel",
+"lat": 45.922358,
+"lon": 23.664418,
+"note": "fuel, coffee, toilets",
+"named": false
+},
+{
+"name": "Petrom",
+"kind": "fuel",
+"lat": 46.080866,
+"lon": 23.574728,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "MOL",
+"kind": "fuel",
+"lat": 46.080943,
+"lon": 23.573447,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "OMV",
+"kind": "fuel",
+"lat": 46.079089,
+"lon": 23.564688,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Hotel Turn",
+"kind": "hotel",
+"lat": 45.957952,
+"lon": 23.56579,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Rompetrol",
+"kind": "fuel",
+"lat": 45.881969,
+"lon": 23.797941,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Step Inn",
+"kind": "hotel",
+"lat": 46.058491,
+"lon": 23.576931,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Carolina Mall",
+"kind": "mall",
+"lat": 46.085902,
+"lon": 23.592791,
+"note": "parking, food, toilets",
+"named": true
+},
+{
+"name": "Hotel EKA",
+"kind": "hotel",
+"lat": 45.965513,
+"lon": 23.559874,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel",
+"kind": "hotel",
+"lat": 45.957073,
+"lon": 23.571386,
+"note": "hotel",
+"named": false
+},
+{
+"name": "Petrom",
+"kind": "fuel",
+"lat": 45.955073,
+"lon": 23.578062,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Karlhof",
+"kind": "hotel",
+"lat": 45.952386,
+"lon": 23.567463,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Baril",
+"kind": "fuel",
+"lat": 45.95917,
+"lon": 23.553241,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Casa Erika",
+"kind": "hotel",
+"lat": 45.958882,
+"lon": 23.552271,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Hotel Clasic",
+"kind": "hotel",
+"lat": 45.953195,
+"lon": 23.580684,
+"note": "hotel",
+"named": true
+},
+{
+"name": "ND Global Rooms",
+"kind": "hotel",
+"lat": 46.081705,
+"lon": 23.582679,
+"note": "motel",
+"named": true
+},
+{
+"name": "Petroliv",
+"kind": "fuel",
+"lat": 45.885639,
+"lon": 23.799331,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Hotel",
+"kind": "hotel",
+"lat": 46.068943,
+"lon": 23.570462,
+"note": "hotel",
+"named": false
+},
+{
+"name": "Hotel",
+"kind": "hotel",
+"lat": 46.066887,
+"lon": 23.573972,
+"note": "hotel",
+"named": false
+},
+{
+"name": "MOL",
+"kind": "fuel",
+"lat": 46.087865,
+"lon": 23.592044,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Hotel Împăratul Romanilor",
+"kind": "hotel",
+"lat": 45.795627,
+"lon": 24.150714,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel \"Euro\"",
+"kind": "hotel",
+"lat": 45.800798,
+"lon": 24.14154,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel Am Ring",
+"kind": "hotel",
+"lat": 45.796893,
+"lon": 24.152541,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Rompetrol",
+"kind": "fuel",
+"lat": 45.796223,
+"lon": 24.139929,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Petrom",
+"kind": "fuel",
+"lat": 45.792794,
+"lon": 24.133103,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "MOL",
+"kind": "fuel",
+"lat": 45.792388,
+"lon": 24.139777,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "OMV",
+"kind": "fuel",
+"lat": 45.793554,
+"lon": 24.130191,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Casa Luxemburg",
+"kind": "hotel",
+"lat": 45.79808,
+"lon": 24.151038,
+"note": "hotel",
+"named": true
+},
+{
+"name": "SOCAR",
+"kind": "fuel",
+"lat": 45.793534,
+"lon": 24.125257,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Pensiunea Ela, Sibiu",
+"kind": "hotel",
+"lat": 45.801481,
+"lon": 24.153635,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Motel",
+"kind": "hotel",
+"lat": 45.78965,
+"lon": 24.14279,
+"note": "motel",
+"named": false
+},
+{
+"name": "Pensiunea Green House",
+"kind": "hotel",
+"lat": 45.78914,
+"lon": 24.118362,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Casa Frieda",
+"kind": "hotel",
+"lat": 45.793306,
+"lon": 24.149164,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Aral",
+"kind": "fuel",
+"lat": 45.80032,
+"lon": 23.899543,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Casa Rudi and Ella",
+"kind": "hotel",
+"lat": 45.790379,
+"lon": 23.892469,
+"note": "guest house",
+"named": true
+},
+{
+"name": "La Taifas",
+"kind": "hotel",
+"lat": 45.787793,
+"lon": 23.891997,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Euroil",
+"kind": "fuel",
+"lat": 45.801113,
+"lon": 23.898815,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Pensiunea Daniel",
+"kind": "hotel",
+"lat": 45.796923,
+"lon": 24.146677,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Motel-Restaurant Izabel",
+"kind": "hotel",
+"lat": 45.784002,
+"lon": 23.999529,
+"note": "motel",
+"named": true
+},
+{
+"name": "Pensiunea Class",
+"kind": "hotel",
+"lat": 45.793691,
+"lon": 23.887099,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Happy Day",
+"kind": "hotel",
+"lat": 45.800764,
+"lon": 24.143315,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Kon Tiki",
+"kind": "hotel",
+"lat": 45.80189,
+"lon": 24.139397,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Pensiunea Nicoleta",
+"kind": "hotel",
+"lat": 45.792993,
+"lon": 23.879102,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Casa Baciu",
+"kind": "hotel",
+"lat": 45.800124,
+"lon": 24.153223,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Villa Santa Maria",
+"kind": "hotel",
+"lat": 45.791036,
+"lon": 24.117473,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Hotel Bliss",
+"kind": "hotel",
+"lat": 45.795961,
+"lon": 24.123596,
+"note": "hotel",
+"named": true
+},
+{
+"name": "B&B Pensiunea Rosen Villa",
+"kind": "hotel",
+"lat": 45.800906,
+"lon": 24.152229,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Pensiunea Casa Helis",
+"kind": "hotel",
+"lat": 45.793917,
+"lon": 24.14906,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Pensiunea Luceafarul",
+"kind": "hotel",
+"lat": 45.79458,
+"lon": 24.145654,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Teatro",
+"kind": "hotel",
+"lat": 45.797353,
+"lon": 24.147275,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Crown Jewels Apartment",
+"kind": "hotel",
+"lat": 45.79833,
+"lon": 24.148656,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Pensiune Chic",
+"kind": "hotel",
+"lat": 45.797897,
+"lon": 24.148902,
+"note": "guest house",
+"named": true
+},
+{
+"name": "YellowBoot Aparthotel",
+"kind": "hotel",
+"lat": 45.799062,
+"lon": 24.149626,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Artisans Boutique Villa",
+"kind": "hotel",
+"lat": 45.799023,
+"lon": 24.152461,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Maison Elysée",
+"kind": "hotel",
+"lat": 45.797205,
+"lon": 24.156125,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Smart Diesel",
+"kind": "fuel",
+"lat": 45.81081,
+"lon": 24.076862,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Hotel Eden",
+"kind": "hotel",
+"lat": 45.793801,
+"lon": 24.119197,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel Goldsmith",
+"kind": "hotel",
+"lat": 45.799456,
+"lon": 24.152542,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel The Council",
+"kind": "hotel",
+"lat": 45.797877,
+"lon": 24.152134,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Huet Residence",
+"kind": "hotel",
+"lat": 45.797997,
+"lon": 24.149587,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Vila Weidner",
+"kind": "hotel",
+"lat": 45.797464,
+"lon": 24.15272,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Pensiunea Central Sibiu",
+"kind": "hotel",
+"lat": 45.797819,
+"lon": 24.154484,
+"note": "hotel",
+"named": true
+},
+{
+"name": "1501 Wergass 18",
+"kind": "hotel",
+"lat": 45.794639,
+"lon": 24.147077,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Casa Rothenberg",
+"kind": "hotel",
+"lat": 45.796308,
+"lon": 24.152537,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel Republique",
+"kind": "hotel",
+"lat": 45.792147,
+"lon": 24.154565,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Da Vinci Residence",
+"kind": "hotel",
+"lat": 45.781295,
+"lon": 24.146449,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Vila Sibiu",
+"kind": "hotel",
+"lat": 45.799996,
+"lon": 24.143078,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Pensiunea Casa HELIS",
+"kind": "hotel",
+"lat": 45.793633,
+"lon": 24.149561,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Casa Vécue Sibiu",
+"kind": "hotel",
+"lat": 45.80039,
+"lon": 24.155549,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Pensiunea Nu Mă Uita",
+"kind": "hotel",
+"lat": 45.795071,
+"lon": 23.874905,
+"note": "guest house",
+"named": true
+},
+{
+"name": "La Casa cu Flori",
+"kind": "hotel",
+"lat": 45.794917,
+"lon": 23.885423,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Rest area",
+"kind": "rest_stop",
+"lat": 45.804394,
+"lon": 24.150116,
+"note": "parking",
+"named": false
+},
+{
+"name": "Rest area",
+"kind": "rest_stop",
+"lat": 45.795681,
+"lon": 24.135472,
+"note": "parking",
+"named": false
+},
+{
+"name": "Rompetrol",
+"kind": "fuel",
+"lat": 45.789327,
+"lon": 24.009392,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Hotel Select",
+"kind": "hotel",
+"lat": 45.792521,
+"lon": 24.134054,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Pensiune Turistică Kasper",
+"kind": "hotel",
+"lat": 45.786544,
+"lon": 24.02575,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Tischler apartments& studio",
+"kind": "hotel",
+"lat": 45.797083,
+"lon": 24.146309,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Brothers House",
+"kind": "hotel",
+"lat": 45.797507,
+"lon": 24.145909,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Pensiunea Todor",
+"kind": "hotel",
+"lat": 45.79762,
+"lon": 24.145535,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Antares CNG",
+"kind": "fuel",
+"lat": 45.789791,
+"lon": 24.088041,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Pensiunea Podul Minciunilor",
+"kind": "hotel",
+"lat": 45.798815,
+"lon": 24.150036,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Vicenza Square",
+"kind": "hotel",
+"lat": 45.798666,
+"lon": 24.146607,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Joyme Hotel",
+"kind": "hotel",
+"lat": 45.78316,
+"lon": 24.147783,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Epic Boutique",
+"kind": "hotel",
+"lat": 45.79637,
+"lon": 24.147325,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Casa Wagner",
+"kind": "hotel",
+"lat": 45.801646,
+"lon": 24.141606,
+"note": "guest house",
+"named": true
+},
+{
+"name": "exclusive",
+"kind": "hotel",
+"lat": 45.801287,
+"lon": 24.142963,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Endlich Zuhause",
+"kind": "hotel",
+"lat": 45.802273,
+"lon": 24.152996,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Hotel Continental Forum",
+"kind": "hotel",
+"lat": 45.792314,
+"lon": 24.147773,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel Ramada",
+"kind": "hotel",
+"lat": 45.790928,
+"lon": 24.147598,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel Rin",
+"kind": "hotel",
+"lat": 45.789036,
+"lon": 24.14963,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Pensiunea Simar",
+"kind": "hotel",
+"lat": 45.787751,
+"lon": 24.137214,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Roberts",
+"kind": "hotel",
+"lat": 45.794129,
+"lon": 24.137678,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel",
+"kind": "hotel",
+"lat": 45.77866,
+"lon": 24.136464,
+"note": "hotel",
+"named": false
+},
+{
+"name": "Gallant",
+"kind": "hotel",
+"lat": 45.778717,
+"lon": 24.136249,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Vila Rochus",
+"kind": "hotel",
+"lat": 45.782777,
+"lon": 24.135233,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Hotel Parc",
+"kind": "hotel",
+"lat": 45.78448,
+"lon": 24.144314,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Motel Petrom",
+"kind": "hotel",
+"lat": 45.792641,
+"lon": 24.133701,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel Best Western Silva",
+"kind": "hotel",
+"lat": 45.785062,
+"lon": 24.14351,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel Ana Tower-Golden Tulip",
+"kind": "hotel",
+"lat": 45.786887,
+"lon": 24.14723,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Euroil",
+"kind": "fuel",
+"lat": 45.793589,
+"lon": 24.131464,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "EUROIL",
+"kind": "fuel",
+"lat": 45.795422,
+"lon": 24.132644,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Hotel MyContinental Sibiu",
+"kind": "hotel",
+"lat": 45.789619,
+"lon": 24.14921,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Academia Evanghelică Transilvania",
+"kind": "hotel",
+"lat": 45.790265,
+"lon": 24.116965,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Lukoil",
+"kind": "fuel",
+"lat": 45.792851,
+"lon": 24.115106,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Mercure",
+"kind": "hotel",
+"lat": 45.793404,
+"lon": 24.111437,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Hotel Apollo Hermannstadt",
+"kind": "hotel",
+"lat": 45.801964,
+"lon": 24.155051,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Casa Romană",
+"kind": "hotel",
+"lat": 45.80162,
+"lon": 24.155579,
+"note": "motel",
+"named": true
+},
+{
+"name": "Petrom",
+"kind": "fuel",
+"lat": 45.793639,
+"lon": 24.129927,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Pensiunea La Taifas",
+"kind": "hotel",
+"lat": 45.788112,
+"lon": 23.892106,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Art Hotel",
+"kind": "hotel",
+"lat": 45.796628,
+"lon": 24.148494,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Stefani",
+"kind": "hotel",
+"lat": 45.80002,
+"lon": 24.130318,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Motorway services",
+"kind": "rest_stop",
+"lat": 45.788684,
+"lon": 24.011079,
+"note": "parking",
+"named": false
+},
+{
+"name": "Lukoil",
+"kind": "fuel",
+"lat": 45.793438,
+"lon": 24.112814,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "OMV",
+"kind": "fuel",
+"lat": 45.789469,
+"lon": 24.085585,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Motorway services",
+"kind": "rest_stop",
+"lat": 45.788871,
+"lon": 24.009622,
+"note": "parking",
+"named": false
+},
+{
+"name": "Vila Antica",
+"kind": "hotel",
+"lat": 45.802219,
+"lon": 24.154842,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Pensiunea Buon Gusto",
+"kind": "hotel",
+"lat": 45.790227,
+"lon": 24.152877,
+"note": "guest house",
+"named": true
+},
+{
+"name": "Petroil",
+"kind": "fuel",
+"lat": 45.792383,
+"lon": 24.110722,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Pensiunea Millenium",
+"kind": "hotel",
+"lat": 45.789835,
+"lon": 24.13657,
+"note": "guest house",
+"named": true
+},
+{
+"name": "SOCAR",
+"kind": "fuel",
+"lat": 45.791675,
+"lon": 24.10032,
+"note": "fuel, coffee, toilets",
+"named": true
+},
+{
+"name": "Hotel Pamira",
+"kind": "hotel",
+"lat": 45.803771,
+"lon": 24.129281,
+"note": "hotel",
+"named": true
+},
+{
+"name": "Tractari Drive in Sibiu",
+"kind": "rest_stop",
+"lat": 45.795524,
+"lon": 24.131845,
+"note": "parking",
+"named": true
+}
+]
+}

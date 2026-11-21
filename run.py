@@ -32,6 +32,7 @@ from dms.config import LOGS_DIR, Config  # noqa: E402
 from dms.events import Severity  # noqa: E402
 from dms.perf import FpsCounter, boost_process  # noqa: E402
 from dms.pipeline import Pipeline  # noqa: E402
+from dms.trip_copilot import TripCopilot
 
 COLORS = {Severity.INFO: (255, 255, 0), Severity.WARNING: (0, 165, 255),
           Severity.CRITICAL: (0, 0, 255)}
@@ -91,7 +92,7 @@ def main():
                 log.write(line + "\n"); log.flush()
 
     # ---- optional LLM assistant ----
-    context = agent = speaker = None
+    context = agent = speaker = copilot = None
     latest_reply = {"reply": None, "shown_at": 0.0}
     if args.llm:
         from dms.agent import Agent, DriverContext, LLMClient

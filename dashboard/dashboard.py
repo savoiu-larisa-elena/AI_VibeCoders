@@ -14,6 +14,7 @@ from datetime import datetime
 import cv2
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse, StreamingResponse, FileResponse, Response
+from fastapi.staticfiles import StaticFiles
 import uvicorn
 
 DASHBOARD_DIR = Path(__file__).resolve().parent
@@ -25,8 +26,12 @@ from dms.agent import Agent, DriverContext, LLMClient
 from dms.agent.agent import FALLBACKS
 from dms.perf import FpsCounter, boost_process
 from dms.fun_facts import FunFactScheduler
+from dms.events import Event, Severity
+from dms.trip_copilot import TripCopilot
 
 app=FastAPI(title='VibeCoders Driver Telemetry')
+(DASHBOARD_DIR/'static').mkdir(exist_ok=True)
+app.mount('/static',StaticFiles(directory=DASHBOARD_DIR/'static'),name='static')   # local Leaflet files
 lock=threading.Lock()
 log_lock=threading.Lock()   # camera thread and LLM thread both write the JSONL log
 state={'camera':'starting','calibrating':True,'fps':0,'signals':{},'statuses':{},'events':[],
@@ -39,7 +44,9 @@ state={'camera':'starting','calibrating':True,'fps':0,'signals':{},'statuses':{}
        # occupants + performance diagnostics
        'driver_present':False,'passengers':0,'timing':{},'frame_id':0,
        # AI voice (spoken on the laptop by dms.voice.Speaker); toggled from the dashboard
-       'voice':{'available':False,'enabled':True}}
+       'voice':{'available':False,'enabled':True},
+       # simulated trip: car position, fatigue level, current stop advice (see dms/trip_copilot.py)
+       'trip':None}
 STREAM_WIDTH=960        # browser video is downscaled: cheaper to encode, send and decode
 STREAM_QUALITY=70
 # Archived dashboard sessions are independent of the continuous JSONL detector logs.
@@ -163,6 +170,46 @@ def trigger_recalibrate():
 
 AGENT={'agent':None}   # set by camera_worker when the LLM assistant runs
 
+# ---- trip / map ----
+COPILOT=TripCopilot(speed_factor=20)   # simulated GPS + fatigue level + stop advice (speed: --trip-speed)
+INJECT=deque()                          # demo events from the dashboard buttons, consumed by the camera loop
+
+@app.get('/trip/map')
+def trip_map():
+    """Static map data (route polyline, rest stops, hotels) - the page fetches it once."""
+    return COPILOT.map_data()
+
+@app.post('/trip/demo/{level}')
+def trip_demo(level: int):
+    """Demo button: act tired without being tired. 0 = reset, 1 = tired, 2 = very tired.
+    Also injects a real event so the assistant speaks (LLM names the recommended place)."""
+    COPILOT.force_level(level)
+    if level>=2:
+        INJECT.append(Event('eyes_closed',Severity.CRITICAL,'demo',data={'seconds':1.5,'demo':True}))
+    elif level==1:
+        INJECT.append(Event('yawn',Severity.WARNING,'demo',data={'mar':0.7,'demo':True}))
+    return {'ok':True,'level':max(0,min(2,level))}
+
+@app.post('/trip/jump/{km}')
+def trip_jump(km: float):
+    COPILOT.jump(km)
+    return {'ok':True}
+
+@app.post('/trip/speed/{factor}')
+def trip_speed(factor: float):
+    COPILOT.set_speed(factor)
+    return {'ok':True}
+
+def trip_hint(trip):
+    """One sentence about the suggested stop, for the pre-written (no-LLM) guidance."""
+    rec=(trip or {}).get('recommendation')
+    if not rec:
+        return None
+    t=rec.get('target')
+    if not t:
+        return 'No known stop in reach - pull over at the first safe place.'
+    return f"Suggested stop: {t['name']} in {t['distance_km']} km (about {t['eta_min']} min)."
+
 @app.post('/unmute')
 def unmute():
     """End the open-palm warning mute early (same as a thumbs up while muted)."""
@@ -251,6 +298,7 @@ def camera_worker(args):
     # ---- driver context (attention score) always; LLM assistant only with --llm ----
     context=DriverContext()
     fact_scheduler=FunFactScheduler()
+    context.trip_provider=COPILOT.for_llm   # LLM summary gets the trip block (fatigue + stop advice)
     agent=None
     if args.llm:
         PRIO={'info':1,'warning':2,'critical':3}
@@ -274,7 +322,7 @@ def camera_worker(args):
             write_log(r.to_json())
             item={'speak':r.speak,'priority':r.priority,'action':r.action,'note':r.dashboard_note,
                   'trigger':r.trigger,'level':r.level,'source':r.source,
-                  'latency':round(r.latency,2),'error':r.error,'ts':r.ts}
+                  'latency':round(r.latency,2),'error':r.error,'ts':r.ts,'stop':r.stop}
             with lock:
                 state['assistant']=item
                 state['assistant_log']=(state['assistant_log']+[item])[-20:]
@@ -324,6 +372,8 @@ def camera_worker(args):
                     if bad_frames>=30:     # keeps failing -> give up and show the error
                         raise
                     continue
+                while INJECT:                  # demo events from the dashboard buttons
+                    events.append(INJECT.popleft())
                 t2=time.perf_counter()
                 h,w=frame.shape[:2]
                 small=cv2.resize(frame,(STREAM_WIDTH,int(h*STREAM_WIDTH/w))) if w>STREAM_WIDTH else frame
@@ -343,6 +393,7 @@ def camera_worker(args):
                     write_log(event.to_json())
                 if not signals.get('calibrating'):
                     context.update(signals,events)
+                    COPILOT.update(events)         # moves the car, updates fatigue level (before the agent asks)
                     if agent:
                         for event in events:
                             agent.handle(event)   # returns immediately; LLM runs in background
@@ -357,6 +408,7 @@ def camera_worker(args):
                     state['calibrating']=bool(signals.get('calibrating'))
                     state['fps']=round(fps,1)
                     state['attention']=round(context.attention)
+                    state['trip']=COPILOT.state()
                     state['muted_seconds']=max(0,round(agent.snoozed_until-time.time())) if agent else 0
                     state['signals']=signals
                     state['statuses']={k:v.status for k,v in pipeline.outputs.items()}
@@ -371,7 +423,8 @@ def camera_worker(args):
                         item=json.loads(event.to_json())
                         state['events'].append(item)
                         if not agent and event.type in FALLBACK:   # with --llm the assistant writes the guidance
-                            state['latest_warning']=FALLBACK[event.type]
+                            hint=trip_hint(state['trip']) if state['trip'] and state['trip']['fatigue_level']>0 else None
+                            state['latest_warning']=FALLBACK[event.type]+(' '+hint if hint else '')
                         if state['session']=='running':
                             state['session_events'].append(item)
                     state['events']=state['events'][-100:]
@@ -405,9 +458,11 @@ if __name__=='__main__':
     parser.add_argument('--no-wheel',action='store_true',help='hide the virtual steering wheel check')
     parser.add_argument('--camera',type=int,default=None)
     parser.add_argument('--port',type=int,default=8000)
+    parser.add_argument('--trip-speed',type=float,default=20.0,help='simulated trip speed-up (1 = real time, 20 = demo)')
     parser.add_argument('--llm',action='store_true',help='enable the LLM assistant (key in .env; uses API quota)')
     args=parser.parse_args()
     print('Performance:',boost_process())   # stop Windows from moving us to slow cores
+    COPILOT.set_speed(args.trip_speed)
     worker=threading.Thread(target=camera_worker,args=(args,),daemon=True)
     worker.start()
     try:

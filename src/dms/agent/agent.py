@@ -36,6 +36,15 @@ Rules:
   "session_minutes" is the drive time (e.g. 0.4 = less than a minute).
 - Never repeat the exact wording from "previous_messages".
 - Never blame or lecture. Be calm, caring and concrete (what to do now).
+- If the JSON has a "trip" block with a "recommendation", the CODE already chose the stop:
+  never pick another place. Say the place name exactly as written, and the distance using
+  "distance_text" exactly (e.g. "4.5 kilometers") - never compute or round distances yourself.
+    kind "pit_stop" -> suggest stopping there for a break, action "suggest_break".
+    kind "lodging"  -> the driver is very tired: recommend resting/sleeping there,
+                       action "pull_over" if escalation_level >= 3, else "suggest_break".
+    kind "stop_now" -> no hotel in reach: stop at that place now, action "pull_over".
+  If "target" is null, say no known stop is within reach and to pull over at the first safe place.
+  If the trip block has no "recommendation", do not mention any place.
 - If the trigger is a gesture, follow its "meaning" (priority "info"):
     acknowledge   -> short thank-you, max 8 words, action "none".
     need_break    -> supportive, suggest stopping at the next safe place, action "suggest_break".
@@ -48,6 +57,8 @@ Reply ONLY with JSON:
  "action": "none" | "eyes_on_road" | "put_phone_away" | "hands_on_wheel" | "suggest_break" | "pull_over" | "check_in",
  "dashboard_note": "<max 12 words, technical summary for the dashboard>"}"""
 
+FATIGUE_TYPES = {"eyes_closed", "yawn", "fatigue_perclos"}
+
 ACTIONS = {"none", "eyes_on_road", "put_phone_away", "hands_on_wheel", "suggest_break",
            "pull_over", "check_in"}
 
@@ -59,6 +70,11 @@ FALLBACKS = {
     "distraction": ("Eyes on the road, please.", "warning", "eyes_on_road"),
     "phone": ("Please put the phone away while driving.", "critical", "put_phone_away"),
     "hands_off_wheel": ("Please put your hands back on the steering wheel.", "warning", "hands_on_wheel"),
+    # trip advice without the LLM: generic on purpose (no place name) so the voice can pre-cache it;
+    # the dashboard shows the actual place from reply.stop
+    "trip_pit_stop": ("You look tired. There's a rest stop ahead, let's pull in for a break.", "warning", "suggest_break"),
+    "trip_lodging": ("You're very tired. Let's stop and rest at the lodging ahead.", "critical", "suggest_break"),
+    "trip_stop_now": ("You're too tired to drive on. Pull over at the next safe place now.", "critical", "pull_over"),
     "acknowledge": ("Got it, thanks.", "info", "none"),
     "need_break": ("Understood. Let's stop at the next safe place for a break.", "info", "suggest_break"),
     "status_report": ("Status report is unavailable right now. Keep up the focus.", "info", "none"),
@@ -95,6 +111,7 @@ class Reply:
     source: str            # "llm" or "fallback"
     latency: float = 0.0
     error: str = ""
+    stop: dict | None = None   # recommended stop (name, lat, lon, distance_km...) for the dashboard map
     ts: float = field(default_factory=time.time)
 
     def to_json(self) -> str:
@@ -205,6 +222,8 @@ class Agent:
 
     def _submit(self, ev: Event, level: int, now: float, meaning: str | None = None) -> None:
         payload = self.context.summary(ev)
+        trip = payload.get("trip")
+        stop = trip.pop("_stop", None) if trip else None   # coordinates stay out of the LLM prompt
         if meaning:
             payload["trigger"]["meaning"] = meaning
         payload["escalation_level"] = level
@@ -214,15 +233,15 @@ class Agent:
             self._queue.get_nowait()            # keep only the newest request
         except queue.Empty:
             pass
-        self._queue.put((ev, level, payload))
+        self._queue.put((ev, level, payload, stop))
 
     # ---- background thread: the camera loop never waits for the network ----
     def _worker(self):
         while True:
-            ev, level, payload = self._queue.get()
+            ev, level, payload, stop = self._queue.get()
             self._busy.set()
             try:
-                reply = self._ask(ev, level, payload)
+                reply = self._ask(ev, level, payload, stop)
             finally:
                 self._busy.clear()
             if ev.type == "fun_fact" and (time.time() < self.snoozed_until or
@@ -231,7 +250,7 @@ class Agent:
             self._previous.append(reply.speak)
             self.on_reply(reply)
 
-    def _ask(self, ev: Event, level: int, payload: dict) -> Reply:
+    def _ask(self, ev: Event, level: int, payload: dict, stop: dict | None = None) -> Reply:
         try:
             prompt = SYSTEM_PROMPT
             if ev.type == "fun_fact":
@@ -262,9 +281,13 @@ Set priority to info and action to none. Keep it brief and pleasant."""
             if ev.type == "fun_fact":
                 priority = "info"
             return Reply(speak, priority, action, str(data.get("dashboard_note", ""))[:120],
-                         ev.type, level, "llm", latency)
+                         ev.type, level, "llm", latency, stop=stop)
         except LLMError as e:
             key = payload["trigger"].get("meaning", ev.type)
+            rec = (payload.get("trip") or {}).get("recommendation")
+            if rec and (ev.type in FATIGUE_TYPES or key == "need_break"):
+                key = {"pit_stop": "trip_pit_stop", "lodging": "trip_lodging",
+                       "stop_now": "trip_stop_now"}.get(rec["kind"], key)
             text, priority, action = FALLBACKS.get(key, ("Please stay focused on the road.",
                                                              ev.severity.value, "eyes_on_road"))
             if ev.type == "fun_fact":
@@ -274,4 +297,4 @@ Set priority to info and action to none. Keep it brief and pleasant."""
             if key == "status_report":
                 text = local_status_report(payload)   # real numbers, no LLM needed
             return Reply(text, priority, action, f"fallback: {ev.type}", ev.type, level,
-                         "fallback", error=str(e)[:200])
+                         "fallback", error=str(e)[:200], stop=stop)

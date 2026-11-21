@@ -37,6 +37,7 @@
 | **Event recorder** | Python + JSON Lines | Writes one structured JSON record per event and per assistant reply. | ✅ Implemented |
 | **Hands on the wheel** | MediaPipe hand landmarks + virtual steering wheel | A laptop camera can't see a real wheel, so the upper half of a see-through wheel is drawn in the lower-left corner, in front of the driver (camera on the roof between the seats: driver left, passenger right). At least one hand on it = OK; no hand for 2 s = warning, 5 s = critical. Starts checking once the hands were on the wheel. On by default (`--no-wheel` hides it). | ✅ Implemented |
 | **Automatic recalibration** | Pipeline rules | Driver seat empty ≥ 15 s, then a face appears → full recalibration (new driver). Every 10 min, only while the driver is alert → background baseline refresh that keeps the fatigue history. | ✅ Implemented |
+| **Trip copilot: rest stop / hotel** | `fatigue.py` + `trip.py` + `trip_copilot.py`, Leaflet map | Fatigue events build a fatigue **level** (0 ok · 1 tired · 2 very tired) that fades over time. Tired → the **code** picks the next rest area / fuel+coffee stop **ahead on the route**; very tired → the next **hotel** (or "stop now" if none is in reach). The LLM only says the chosen place (name + distance), it never invents one. Simulated drive on the **real road Cluj-Napoca → Sibiu (180 km)** with **428 real places from OpenStreetMap** (rest areas, fuel stations, malls, hotels/guesthouses), shown on a live map with demo buttons. Works offline (data saved in `data/`). | ✅ Implemented |
 | **Driver + passengers** | Face position tracking | Driver = the face at the calibrated seat position (green box); every other face is a passenger (blue box). The copilot can ask a passenger to help when the driver is very tired. | ✅ Implemented |
 | **AI voice** | Groq TTS (Orpheus, voice "troy") + pygame playback; offline fallback `pyttsx3` | Speaks each copilot message on the laptop; critical alerts interrupt. The fixed sentences (fallbacks, gesture replies) are pre-generated into `voice_cache/`, so the natural voice also works without the LLM. | ✅ Implemented |
 | **Sound + visual alerts** | Web Audio + CSS | Beep before warnings, double tone + red panel flash for critical. The dashboard **VOICE** button turns the voice on/off (browser speech is used only if the AI voice isn't running). | ✅ Implemented |
@@ -144,6 +145,22 @@ python run.py --camera 1                # try another camera index
 
 **Both apps use the camera — run only one at a time.**
 
+## 🗺️ Trip copilot — where should a tired driver stop?
+
+| Fatigue level | How it's reached | What the copilot recommends |
+|---|---|---|
+| 0 – OK | default | nothing |
+| 1 – tired | e.g. 3 yawns, or PERCLOS high | the next **rest area / fuel station / mall** ahead on the route (≤ 40 km) |
+| 2 – very tired | e.g. repeated eye closures | the next **hotel** ahead (≤ 60 km); if none, the nearest place to **stop now** |
+
+- Events add points that fade (half-life 2 min) with hysteresis, so one yawn never sends you to a hotel.
+- Places are judged by **distance ahead along the route**, not straight-line distance.
+- 👎 thumbs down ("I need a break") always gets a pit-stop suggestion.
+- **Demo controls** on the dashboard: *Simulate: tired / very tired / reset*, trip speed, jump along the route — so the demo doesn't depend on actually being tired.
+- **Real data, offline:** `data/route_cache.json` = the real road geometry (OSRM), `data/poi_cache.json` = real places within 2.5 km of the road (OpenStreetMap, © OpenStreetMap contributors), both fetched once and saved. Only places **at least 300 m ahead** are suggested (closer is too late to turn in). Distances are spoken naturally ("500 meters", "4.5 kilometers"). If the `data/` files are missing, a demo route with made-up demo places is used.
+- Map background tiles © OpenStreetMap contributors (internet needed for the background; the route and pins draw offline).
+- Start option: `--trip-speed 20` (simulated speed-up, 1 = real time).
+
 ## 📊 Driver telemetry — how detection decisions are made
 
 | Detector | Signal / rule | Default event trigger |
@@ -206,7 +223,8 @@ CV event → agent rules (cooldown, escalation level) → compact JSON summary
 AI_VibeCoders/
 ├── dashboard/
 │   ├── dashboard.py           # Pit Wall server: camera + pipeline + LLM, web API
-│   └── dashboard_ui.html      # Dashboard page
+│   ├── dashboard_ui.html      # Dashboard page
+│   └── static/leaflet/        # map library (Leaflet 1.9.4, served locally)
 ├── run.py                     # Debug app: OpenCV window, overlay, event logging
 ├── requirements.txt           # Pinned Python dependencies
 ├── .env.example               # Template for API keys (copy to .env)
@@ -224,6 +242,9 @@ AI_VibeCoders/
 │   ├── pipeline.py            # Detector orchestration + timing
 │   ├── perf.py                # Windows anti-throttling + FPS counter
 │   ├── voice.py               # AI voice: Groq TTS, cache, offline fallback
+│   ├── fatigue.py             # fatigue events -> fatigue level 0/1/2
+│   ├── trip.py                # route + real places ahead, stop advisor
+│   ├── trip_copilot.py        # glue: fatigue level + stop advice for LLM and map
 │   ├── detectors/
 │   │   ├── base.py            # Detector interfaces
 │   │   ├── drowsiness.py      # Eye / mouth / fatigue signals
@@ -236,6 +257,7 @@ AI_VibeCoders/
 │       ├── llm.py             # LLM client (Groq / Gemini / Ollama)
 │       ├── context.py         # Driver summary + attention score
 │       └── agent.py           # When to call, escalation, prompt, fallback
+├── data/                      # real road + OpenStreetMap places for the trip copilot
 ├── voice_cache/               # Pre-generated audio for fixed phrases
 ├── models/                    # Downloaded weights (not committed)
 ├── logs/                      # Session JSONL + dashboard sessions (not committed)

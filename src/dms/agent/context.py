@@ -18,6 +18,9 @@ class DriverContext:
         self.signals: dict = {}
         self.attention = 100.0       # smoothed 0-100
         self.totals: Counter = Counter()   # whole-session event counts (for status reports)
+        # optional: callable(trigger_event) -> dict | None. Set by run.py / dashboard to attach the
+        # trip block (fatigue level + stop recommendation) to the LLM summary.
+        self.trip_provider = None
 
     # ---- called every frame ----
     def update(self, signals: dict, events: list[Event]) -> None:
@@ -61,7 +64,7 @@ class DriverContext:
             f"{e.type}{_fmt(e.data)} ({int(now - e.ts)}s ago)"
             for e in list(self.events)[-8:] if e is not trigger and e.type != "gesture"
         ]
-        return {
+        summary = {
             "trigger": {"type": trigger.type, "severity": trigger.severity.value, **trigger.data},
             "driver_state": {
                 "attention_score": round(self.attention),
@@ -85,6 +88,11 @@ class DriverContext:
             "recent_events": recent,
             "session_minutes": round((now - self.started) / 60, 1),
         }
+        if self.trip_provider:
+            trip = self.trip_provider(trigger)
+            if trip:
+                summary["trip"] = trip
+        return summary
 
 
 def _fmt(data: dict) -> str:
